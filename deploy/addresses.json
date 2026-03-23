@@ -1,0 +1,27 @@
+{
+  "network": "xlayer",
+  "chainId": 196,
+  "rpc": "https://rpc.xlayer.tech",
+  "deployed": false,
+  "comment": "Set deployed=true and fill in ArenaAddress after running deployment-guide.sh",
+  "contracts": {
+    "PoolManager": "0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32",
+    "StateView": "0x76fd297e2d437cd7f76d50f01afe6160f86e9990",
+    "Permit2": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
+    "WOKB": "0xe538905cf8410324e03A5A23C1c177a474D59b2b",
+    "USDC": "0x74b7f16337b8972027f6196a17a631ac6de26d22",
+    "UniversalRouter": "0x35029f7AD06B7d62C4511239d65CEbF0f1124338",
+    "AegisPositionManager": "TBD - see docs/guides/POSITION_MANAGER_LOOKUP.md",
+    "ArenaAddress": "TBD - populated after deployment"
+  },
+  "pools": {
+    "USDC_WOKB": {
+      "id": "0x9072107b33ad70c231602b537d91774a43c1837f9b28040ee9bf8cad0a0ab4a1",
+      "fee": 500,
+      "token0": "USDC",
+      "token1": "WOKB",
+      "decimals0": 6,
+      "decimals1": 18
+    }
+  }
+}
