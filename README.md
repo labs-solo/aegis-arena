@@ -1,15 +1,30 @@
-# AEGIS Arena — AI-versus-AI Strategy Game
+# AEGIS Arena — The First Autonomous Agent Marketplace
 
-**AEGIS Arena** is a reference implementation of an autonomous trading game built on [AEGIS Engine](https://github.com/labs-solo/aegis-engine) and deployed on **X Layer (Chain ID 196)**.
+Most liquidity provision loses money. Impermanent loss, cascading liquidations, and static fee models bleed LPs even when markets are trending sideways. **AEGIS changes this at the protocol level** — and AEGIS Arena is where you prove it.
 
-## Core Concept
+**AEGIS Engine is a Uniswap v4 hook that gives liquidity positions on-chain credit.** LPs don't just earn fees — they borrow against their positions, take directional bets, and earn even when prices move against them. The math that makes this safe is the same math that eliminates cascade liquidations entirely.
 
-Three independent AI agents compete by managing leveraged DeFi portfolios in real-time. The game demonstrates:
+### Why No Cascade Liquidations Matter
 
-- **Autonomous portfolio management** — agents make independent decisions
-- **No cascade liquidations** — AEGIS Engine's sqrt(K) solvency model guarantees safety
-- **On-chain scoring** — final positions converted to USDC and ranked fairly
-- **Agentic payments** — x402 entry fee + signal marketplace integration
+In traditional DeFi (Compound, Aave, even Uniswap v3): when a borrower gets liquidated, the liquidation pressure cascades — price drops, triggers more liquidations, collapses the pool. **AEGIS uses sqrt(K) solvency: each vault is isolated, borrows against the geometric mean of its own liquidity, and can only be liquidated to the point of solvency — never below.** Concrete example: "Agent B's over-leveraged position gets peeled — not liquidated — AEGIS takes back exactly what it needs to stay solvent and leaves the rest. The pool price doesn't move. Agent A's position is unaffected." **This means AI agents can run 3x leverage aggressively, in competition, on a shared pool, without any risk of systemic collapse.**
+
+### The Arena Pitch
+
+AEGIS Arena puts three AI agents — a passive LP, a trend trader, and a predator — into a live game on X Layer. They compete, cooperate via Bounty Bonds, read each other's positions, and pay each other for trading signals. All on-chain. No humans.
+
+### The Path to Real DeFi
+
+This isn't a simulation. Winning strategies from AEGIS Arena run on real AEGIS Engine infrastructure — the same contracts that will custody real capital post-audit.
+
+## Why Liquidity Provision Wins by Default in AEGIS
+
+1. **Dynamic Fees** — Fees adjust automatically to volatility. When the market is moving fast (when IL risk is highest), fees go up. LPs earn more exactly when they're most at risk.
+
+2. **On-Chain Credit** — Your LP position is collateral. You can borrow against it, go directional, and earn trading profits on top of fee income. Traditional LPs choose between fees or directional exposure. AEGIS lets you do both.
+
+3. **Isolated Solvency** — Because each vault's solvency is calculated independently using sqrt(K), one agent's loss never affects another's. This isolation is what allows aggressive leverage without systemic risk.
+
+**Payoff:** This creates a default-profitable environment for liquidity. Agents that do nothing earn fees. Agents that are active earn fees AND trading alpha. The floor is higher than in any other DeFi protocol.
 
 ## Features
 
@@ -93,6 +108,16 @@ Uniswap v4 (X Layer)
 
 See [`docs/specs/AGENTS.md`](docs/specs/AGENTS.md) for complete strategy specifications.
 
+## The Path from Arena to Production
+
+**Phase 1 (Now): AEGIS Arena proves the strategies work.** Three AI agents compete with real on-chain logic on X Layer testnet. Winning strategies are identified. Bugs are found. Game theory is validated.
+
+**Phase 2 (Post-audit): AEGIS Engine deploys to mainnet.** The same contracts, same primitives, same solvency model. Agent strategies proven in the Arena run on real capital.
+
+**Phase 3 (Scale): Any agent can join.** Any developer can write an agent that implements the 4 AEGIS primitives. Profitable agents attract capital. More capital = more fees. More fees = more agents. The flywheel starts.
+
+---
+
 ## 🎯 Bounty Bonds: Agent-to-Agent Payments
 
 **Bounty Bonds** are the innovation that makes AEGIS Arena unique among hackathon projects: AI agents can form coalitions and pay each other for services.
@@ -148,6 +173,16 @@ In traditional DeFi games, agents compete. In AEGIS Arena, agents can create eco
 - **Agents:** All 3 agents participate (PassiveLP creates, TrendFollower/Predator claim)
 
 **See also:** [`docs/specs/BOUNTY_BONDS.md`](docs/specs/BOUNTY_BONDS.md) for full technical specification.
+
+## How AEGIS Compares to Other Protocols
+
+| Protocol | Liquidation Model | LP Profitability | Agent Leverage | Systemic Risk |
+|----------|-------------------|------------------|-----------------|---------------|
+| Uniswap v3 | N/A (no borrowing) | IL-exposed, fees only | N/A | No borrowing |
+| Aave/Compound | Global cascade risk | Lender only | Up to liquidation threshold | Cascade failure possible |
+| **AEGIS Engine** | **Isolated sqrt(K) per vault** | **Fees + directional alpha** | **~3x, no cascade** | **No cascade liquidations** |
+
+**In plain terms:** AEGIS is what you get when you build lending primitives specifically designed for LP positions, not borrowed assets.
 
 ---
 
@@ -228,6 +263,22 @@ TrendFollower is not a mock agent with hardcoded signals — it connects to real
 [TrendFollower] SMA20=2450.23, SMA50=2441.87
 [TrendFollower] Trend: BULLISH — executing long
 ```
+
+---
+
+## How to Build Your Own Agent
+
+1. **Copy** `src/agents/base-agent.ts`
+2. **Implement** `decideAction(state: GameState): Promise<Action[]>`
+3. **Use the 4 AEGIS primitives:**
+   - `depositLiquidity()` — become an LP
+   - `borrow()` — take leverage against your LP position
+   - `swap()` — take directional bets
+   - `placeLimitOrder()` — set exit targets
+4. **Set environment variables:** `OKX_GATEWAY_API_KEY` and `AGENT_PRIVATE_KEY` in `.env`
+5. **Run:** `npx ts-node src/agents/your-agent.ts`
+
+See [`docs/guides/ADDING_AGENTS.md`](docs/guides/ADDING_AGENTS.md) for a complete walkthrough with examples.
 
 ---
 

@@ -4,6 +4,16 @@
 **Duration:** 5–10 minutes  
 **Goal:** Show how AI agents cooperate via Bounty Bonds and compete with measurable on-chain proof
 
+## What You're Looking At
+
+AEGIS Arena is an autonomous AI agent competition built on AEGIS Engine — a Uniswap v4 hook with isolated vault solvency, dynamic fees, and on-chain credit for LP positions. Three AI agents compete using:
+- **OKX Wallet API** for transaction signing and execution
+- **OKX Market API** for live price data (trend detection)
+- **OKX Onchain Gateway** for pre-flight TX validation
+- **x402** for agent-to-agent payments (Bounty Bonds)
+
+**No simulated data. No mock transactions. Every action is a real on-chain transaction on X Layer.** You can verify everything in real-time on xlayerscan.com.
+
 ---
 
 ## Before the Demo

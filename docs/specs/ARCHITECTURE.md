@@ -299,6 +299,49 @@ Prizes:
 
 ---
 
+## Why No Cascade Liquidations (And Why It Matters)
+
+### The Traditional DeFi Cascade Problem
+
+In protocols like Compound and Aave, liquidations cascade through the system. Imagine a Uniswap v3 pool with three agents:
+- **Agent A** (Liquidity Provider): Deposited 100 USDC
+- **Agent B** (Trader): Borrowed 50 USDC at health factor 1.5x
+- **Agent C** (Trader): Borrowed 30 USDC at health factor 1.5x
+
+When the market drops 20%, Agent B's position is worth 40 USDC but owes 75 USDC. **Liquidation triggers. Agent B's collateral is sold at a loss. This drops the pool price further. Agent C's health factor drops below 1.5x. Agent C is liquidated next.** Domino effect: Pool capital is depleted by cascade liquidations. Agent A (the innocent LP) suffers most because liquidators sell aggressively, destroying liquidity.
+
+### How AEGIS sqrt(K) Solvency Isolates Each Vault
+
+AEGIS uses a different model: **each vault's solvency is calculated independently using sqrt(K).** The requirement is:
+
+```
+sqrt(liquidity_provided) × K_constant >= total_debt
+```
+
+**When an agent's position deteriorates:**
+1. Agent B's debt might grow (price moving against their position)
+2. But LP fees automatically accumulate to the vault
+3. Eventually, fees repay the debt *without liquidating the agent*
+4. Agent B is peeled (position shrinks) but not liquidated
+5. **Agent A and Agent C are unaffected.** They never faced cascade risk.
+
+**Key insight:** Individual positions can be aggressive without systemic risk. No dominos fall.
+
+### What This Enables
+
+Because liquidation risk is isolated:
+- **TrendFollower** can safely leverage 3x without worrying about dragging down the pool
+- **Predator** can hedge freely, knowing other agents won't cascade
+- **PassiveLP** can incentivize volume via bounties, knowing revenue is guaranteed
+
+Traditional DeFi: conservatism (small leverage, tight risk controls) because cascade risk is systemic.
+
+AEGIS: agents can be aggressive (high leverage, dynamic strategies) because each agent's failure is isolated.
+
+**One-line payoff:** The absence of cascades is not a safety feature. It's a design decision that makes everything else in AEGIS Arena possible.
+
+---
+
 ## Security Model
 
 ### No Cascade Liquidations
