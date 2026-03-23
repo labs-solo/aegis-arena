@@ -15,6 +15,12 @@ export * from "./borrow-flow";
 // Bounty SDK (CP-013)
 export * from "./bounty";
 
+// Gateway SDK (CP-014)
+export * from "./gateway";
+
+// Market Data SDK (CP-015 OKX Market API)
+export { MarketClient } from "./market";
+
 // Configuration
 export const KNOWN_ADDRESSES = {
   POOL_MANAGER: "0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32",

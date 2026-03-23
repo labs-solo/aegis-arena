@@ -7,6 +7,12 @@
 │ AI Agents (PassiveLP, TrendFollower, Predator)      │
 └─────────────────┬───────────────────────────────────┘
                   │
+                  ▼ (simulate before broadcast)
+        ┌─────────────────────────────┐
+        │   OKX Onchain Gateway       │ ← TX Simulation + Optimization
+        │   (Pre-flight Validation)   │
+        └─────────┬───────────────────┘
+                  │ (broadcast if simulation passes)
                   ▼
         ┌─────────────────────┐
         │   Arena Contract    │ ← Game Orchestration
@@ -61,21 +67,69 @@ struct RoundData {
 
 ---
 
-### 2. Agent Contracts (Off-chain or Integrated)
+### 2. OKX Onchain Gateway Integration
+
+**Responsibilities:**
+- Pre-flight transaction simulation (dry-run before broadcast)
+- Gas estimation and cost prediction
+- Multi-path transaction propagation (optimized for X Layer)
+- Order tracking and confirmation polling
+- Graceful fallback to direct RPC if gateway unavailable
+
+**Integration Pattern:**
+```
+Agent.decideAction() → Action[]
+    ↓
+Agent.executeActions() [NEW: with OKX Gateway]
+    ↓
+GatewayClient.simulate(txData)
+    ├─ If success: GatewayClient.broadcast(signedTx)
+    │                   ↓
+    │            GatewayClient.waitForConfirmation(txHash)
+    ├─ If simulation fails: skip action (graceful degradation)
+    └─ If gateway unavailable: fallback to direct RPC
+```
+
+**Key Features:**
+- **Simulation before broadcast** — Agents validate their own actions before submitting on-chain
+- **Gas estimation** — Agents predict transaction costs upfront
+- **Autonomous safety** — No human review; agents make autonomous decisions
+- **Production pattern** — Uses the same infrastructure OKX uses for production DeFi
+- **Logging** — All simulation/broadcast results logged for audit and judge visibility
+
+**Example Log Output:**
+```
+[PassiveLP] TX simulated OK — gasUsed: 145233
+[PassiveLP] Broadcasting signed transaction...
+[PassiveLP] Confirmed in 2 blocks ✓
+```
+
+**Fallback Behavior:**
+- If OKX Gateway timeout → use direct RPC
+- If simulation fails → log reason, skip action, continue
+- If broadcast fails → log error, fall back to direct RPC
+- **No crashes** — graceful degradation always available
+
+---
+
+### 4. Agent Contracts (Off-chain or Integrated)
 
 **Each Agent:**
 - Inherits `BaseAgent` class
 - Implements `decideAction(state)` → returns `Action[]`
 - Calls `Arena.executeBatch()` to execute actions
+- **NEW:** Calls `GatewayClient.simulate()` before broadcasting (automatic via BaseAgent)
 
 **Three Strategies:**
 1. **PassiveLP:** Fee farming via liquidity provision
 2. **TrendFollower:** Leveraged directional trading (3x via AEGIS)
 3. **Predator:** Delta-neutral volatility arbitrage
 
+**All agents inherit OKX Gateway simulation automatically** — no agent-specific changes required.
+
 ---
 
-### 3. AEGIS Engine Integration
+### 5. AEGIS Engine Integration
 
 **PositionManager Address (from PR #18):**
 - Critical for debt modification (FIX #1)
@@ -98,7 +152,7 @@ Batch 2: AE_LOCK_VAULT
 
 ---
 
-### 4. X Layer Network
+### 6. X Layer Network
 
 **RPC:** https://rpc.xlayer.tech
 **Chain ID:** 196

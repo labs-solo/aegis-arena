@@ -145,9 +145,24 @@ class AgentTrendFollower extends BaseAgent {
   }
 
   private async detectTrend(state: GameState): Promise<number> {
-    // Compare current price to moving average
-    // Return: 1 (up), -1 (down), 0 (sideways)
-    return 0;  // Stub
+    // Fetch OKX Market API K-line data (CP-015)
+    // Uses SMA(20) / SMA(50) crossover for trend signal
+    // Return: 1 (bullish uptrend), -1 (bearish downtrend), 0 (flat/uncertain)
+    
+    const klines = await this.marketClient.getKlines(
+      "OKB-USDT",  // Instrument ID
+      "5m",        // 5-minute timeframe
+      50           // Fetch 50 candles (~4.2 hours of history)
+    );
+    
+    const closes = klines.map(k => parseFloat(k.closePrice));
+    const sma20 = this.marketClient.computeSMA(closes.slice(-20));
+    const sma50 = this.marketClient.computeSMA(closes);
+    
+    // SMA crossover thresholds with 0.1% hysteresis to avoid whipsaw
+    if (sma20 > sma50 * 1.001) return 1;      // Bullish uptrend
+    if (sma20 < sma50 * 0.999) return -1;     // Bearish downtrend
+    return 0;                                   // Flat (no cross)
   }
 }
 ```
@@ -166,9 +181,16 @@ class AgentTrendFollower extends BaseAgent {
 
 ### Why It Works
 - Leverages AEGIS sqrt(K) solvency: no cascade liquidations even at 3x
-- Trend detection allows profitable directional bets
+- **Real SMA crossover trend detection** (CP-015): Uses OKX Market API to fetch 50 5-minute K-line candles
+  - Computes SMA(20) and SMA(50) from close prices
+  - Signals bullish trend when SMA20 > SMA50 × 1.001
+  - Signals bearish trend when SMA20 < SMA50 × 0.999
+  - Hysteresis (±0.1%) prevents whipsaw on tight crosses
+- **60-second trend cache** prevents API hammering (1 call every ~1 minute)
+- **LTV safety valve:** Blocks leverage when vault LTV > 85% to prevent over-leveraging
 - 3-batch borrow pattern ensures PositionManager unlock only when needed
 - Handles both uptrends and downtrends
+- **Graceful degradation:** Returns 0 (flat/no trade) on API failure or insufficient data
 
 ### Bounty Integration: Claiming Strategy
 

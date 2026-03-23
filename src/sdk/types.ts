@@ -104,3 +104,70 @@ export interface ClaimBountyResult {
   claimer: string;            // 0x-prefixed address
   blockNumber: bigint;
 }
+
+// ================================================================
+// Gateway Types (CP-014 OKX Onchain Gateway Integration)
+// ================================================================
+
+export interface SimulateParams {
+  chainId: number;
+  from: string;
+  to: string;
+  data: string;
+  value?: string;
+}
+
+export interface SimulationResult {
+  success: boolean;
+  gasUsed?: bigint;
+  revertReason?: string;
+  logs?: unknown[];
+}
+
+export interface BroadcastParams {
+  signedTx: string;
+  chainId: number;
+}
+
+export interface BroadcastResult {
+  txHash: string;
+  status: "pending" | "confirmed" | "failed";
+}
+
+export interface GasEstimateParams {
+  chainId: number;
+  from: string;
+  to: string;
+  data: string;
+  value?: string;
+}
+
+// ================================================================
+// Market Data Types (CP-015 Market API Integration)
+// ================================================================
+
+export interface Kline {
+  timestamp: number; // Unix timestamp (ms)
+  openPrice: string; // Price as string (from OKX JSON)
+  highPrice: string;
+  lowPrice: string;
+  closePrice: string;
+  volume: string; // Base asset volume
+  volCcy: string; // Quote asset volume
+}
+
+export interface MarketPrice {
+  instId: string;
+  lastPrice: string;
+  bestBid: string;
+  bestAsk: string;
+  timestamp: number;
+}
+
+export interface IndexPrice {
+  instId: string;
+  idxPx: string;
+  timestamp: number;
+}
+
+export type TrendDirection = 1 | -1 | 0; // 1 = uptrend, -1 = downtrend, 0 = flat
