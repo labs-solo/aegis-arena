@@ -58,6 +58,42 @@ class AgentPassiveLP extends BaseAgent {
 - Idle USDC provides buffer against adverse price moves
 - No liquidation risk (no debt)
 
+### Bounty Integration: Creator Strategy
+
+PassiveLP creates bounties when excess liquidity is idle:
+
+```typescript
+// In performAction():
+const idleUsdc = await this.getIdleUsdcBalance();
+const bountyThreshold = 5000n * 10n ** 6n;
+
+if (idleUsdc > bountyThreshold) {
+  // Create bounty to attract trading volume
+  const bountyReward = 1000n * 10n ** 6n;
+  const condition: BountyCondition = {
+    minVolumeUsdc: 10000n * 10n ** 6n,
+    targetPriceMin: 950000000n,
+    targetPriceMax: 1050000000n,
+    windowBlocks: 100n,
+  };
+
+  try {
+    const bountyId = await createBounty(
+      this.arenaClient,
+      roundId,
+      bountyReward,
+      condition
+    );
+    console.log(`[PassiveLP] Created bounty ${bountyId} with reward ${bountyReward}`);
+  } catch (error) {
+    console.error("[PassiveLP] Failed to create bounty:", error);
+    // Don't fail the round
+  }
+}
+```
+
+**Outcome:** PassiveLP trades bounty cost for fee revenue from trading volume. Incentivizes other agents to trade on its pool.
+
 ### Example Results
 ```
 Initial capital: 100 USDC
@@ -134,6 +170,49 @@ class AgentTrendFollower extends BaseAgent {
 - 3-batch borrow pattern ensures PositionManager unlock only when needed
 - Handles both uptrends and downtrends
 
+### Bounty Integration: Claiming Strategy
+
+TrendFollower evaluates and claims bounties when conditions align:
+
+```typescript
+// In performAction():
+const activeBounties = await getRoundBounties(this.arenaClient, roundId);
+
+for (const bountyId of activeBounties) {
+  const bounty = await getBounty(this.arenaClient, bountyId);
+  if (!bounty || bounty.claimed) continue;
+
+  // Evaluate if we can satisfy this bounty's conditions
+  if (this.canSatisfyBountyCondition(bounty.condition)) {
+    try {
+      await claimBounty(this.arenaClient, bountyId);
+      console.log(
+        `[TrendFollower] Claimed bounty ${bountyId} ` +
+        `(reward=${bounty.rewardAmount}, minVolume=${bounty.condition.minVolumeUsdc})`
+      );
+    } catch (error) {
+      console.error(`[TrendFollower] Failed to claim bounty ${bountyId}:`, error);
+    }
+  }
+}
+
+private canSatisfyBountyCondition(condition: BountyCondition): boolean {
+  // TrendFollower estimates: can execute 15k USDC in trades
+  const estimatedVolume = 15000n * 10n ** 6n;
+  
+  // Price range should be permissive (±5%)
+  const priceRangeOk = 
+    condition.targetPriceMax - condition.targetPriceMin <= 1000000000n;
+  
+  return (
+    estimatedVolume >= condition.minVolumeUsdc &&
+    priceRangeOk
+  );
+}
+```
+
+**Outcome:** Executes directional trades that satisfy bounty conditions; supplements trading returns with bounty rewards.
+
 ### Risk/Return Profile
 ```
 Scenario 1: Correct trend, 10% price move
@@ -209,6 +288,49 @@ class AgentPredator extends BaseAgent {
 - **Concentrated liquidity:** Higher fee per $ deployed
 - **Rebalancing:** Locks in gains when delta drifts
 - **Stable:** Profits from volatility even if price doesn't move
+
+### Bounty Integration: Conservative Claiming
+
+Predator claims bounties only when price constraints match delta-neutral strategy:
+
+```typescript
+// In performAction():
+const activeBounties = await getRoundBounties(this.arenaClient, roundId);
+
+for (const bountyId of activeBounties) {
+  const bounty = await getBounty(this.arenaClient, bountyId);
+  if (!bounty || bounty.claimed) continue;
+
+  // More conservative than TrendFollower
+  if (this.canSatisfyBountyCondition(bounty.condition)) {
+    try {
+      await claimBounty(this.arenaClient, bountyId);
+      console.log(
+        `[Predator] Claimed bounty ${bountyId} ` +
+        `(reward=${bounty.rewardAmount})`
+      );
+    } catch (error) {
+      console.error(`[Predator] Failed to claim bounty ${bountyId}:`, error);
+    }
+  }
+}
+
+private canSatisfyBountyCondition(condition: BountyCondition): boolean {
+  // Predator estimates: can execute 8k USDC (conservative)
+  const estimatedVolume = 8000n * 10n ** 6n;
+  
+  // Requires tight price range (±2%), compatible with hedging
+  const priceRangeOk = 
+    condition.targetPriceMax - condition.targetPriceMin <= 200000000n;
+  
+  return (
+    estimatedVolume >= condition.minVolumeUsdc &&
+    priceRangeOk
+  );
+}
+```
+
+**Outcome:** Claims bounties with tight price constraints (compatible with delta-neutral hedging); supplements volatility harvesting returns with bounty rewards.
 
 ### Example Results
 ```

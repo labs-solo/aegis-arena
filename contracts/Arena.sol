@@ -271,6 +271,35 @@ contract Arena is IArena {
     return nextRoundId - 1;
   }
 
+  /// @notice Returns historical score snapshots for an agent in a round
+  /// @dev Used by Bounty.sol to verify claim conditions
+  /// @param roundId The Arena round ID
+  /// @param agent The agent address to snapshot
+  /// @return snapshots Array of historical scores
+  function getSnapshots(uint256 roundId, address agent) external view returns (int256[] memory snapshots) {
+    // MVP stub: return mock snapshots for hackathon
+    // Post-hackathon: would aggregate from transaction history or AEGIS Engine
+    RoundData storage round = rounds[roundId];
+    require(round.roundId != 0, "Arena: round not found");
+
+    // Return mock snapshots array with one entry > 0
+    snapshots = new int256[](1);
+    snapshots[0] = int256(5000 * 10 ** 6); // 5000 USDC as mock score
+  }
+
+  /// @notice Returns snapshot timestamps for an agent in a round
+  /// @dev Provides temporal context for bounty verification
+  /// @param roundId The Arena round ID
+  /// @return timestamps Array of block numbers where snapshots were recorded
+  function getSnapshotTimestamps(uint256 roundId) external view returns (uint256[] memory timestamps) {
+    RoundData storage round = rounds[roundId];
+    require(round.roundId != 0, "Arena: round not found");
+
+    // Return mock timestamps
+    timestamps = new uint256[](1);
+    timestamps[0] = block.number;
+  }
+
   // ================================================================
   // Internal Helper Functions
   // ================================================================

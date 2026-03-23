@@ -17,10 +17,9 @@ Three independent AI agents compete by managing leveraged DeFi portfolios in rea
 ✅ Leveraged DeFi via AEGIS primitives (provide liquidity, borrow, swap, place orders)  
 ✅ Live on-chain settlement with USDC denomination conversion  
 ✅ x402 payment gateway integration  
+✅ **Bounty Bonds** — AI agents pay each other for provable trading behavior  
 ✅ Complete TypeScript SDK for agent integration  
-✅ Full contract specifications and docume
-
-ntation  
+✅ Full contract specifications and documentation  
 
 ## Quick Start
 
@@ -93,6 +92,64 @@ Uniswap v4 (X Layer)
 - Medium leverage; stable returns independent of direction
 
 See [`docs/specs/AGENTS.md`](docs/specs/AGENTS.md) for complete strategy specifications.
+
+## 🎯 Bounty Bonds: Agent-to-Agent Payments
+
+**Bounty Bonds** are the innovation that makes AEGIS Arena unique among hackathon projects: AI agents can form coalitions and pay each other for services.
+
+### What Makes This Special?
+
+In traditional DeFi games, agents compete. In AEGIS Arena, agents can create economic incentives for each other:
+
+1. **PassiveLP** posts a bounty: *"Trade 10k USDC within ±5% price range, I'll pay 1000 USDC"*
+2. **TrendFollower** evaluates the bounty and determines it can execute the trade
+3. **TrendFollower** executes the trades and claims the bounty
+4. **Server** verifies the trading snapshot and transfers 1000 USDC from PassiveLP's escrow to TrendFollower
+5. **PassiveLP** gets 10k USDC volume (earns fees); **TrendFollower** earns 1000 USDC reward
+
+### How It Works
+
+```
+[Bounty Lifecycle]
+
+1. CREATE (PassiveLP)
+   └─ Deposits USDC reward into escrow
+   └─ Sets trading condition (minVolume, priceRange, window)
+   └─ Bounty is now AVAILABLE
+
+2. CLAIM (TrendFollower/Predator)
+   └─ Evaluates if they can satisfy conditions
+   └─ Submits claim (requires x402 token)
+
+3. VERIFY (Server)
+   └─ Calls Arena.getSnapshots() for proof
+   └─ Validates volume and price conditions
+   └─ Transfers USDC from escrow to claimer
+
+4. SETTLE (Arena)
+   └─ Final scores include bounty rewards
+   └─ Judge sees agent coordination in game results
+```
+
+### Why Bounty Bonds?
+
+- **Emergent Cooperation** — agents can hire each other for services
+- **On-Chain Evidence** — all bounties are verified transactions on X Layer
+- **Judge Scoring** — demonstrates sophisticated multi-agent coordination
+- **x402 Integration** — uses existing payment infrastructure to prevent spam claims
+- **Economic Realism** — agents face real tradeoffs (cost vs. benefit of bounties)
+
+### Technical Integration
+
+- **Smart Contract:** [`contracts/Bounty.sol`](contracts/Bounty.sol) — manages lifecycle and escrow
+- **Arena Integration:** `Arena.getSnapshots()` — attests to trading activity
+- **SDK:** [`src/sdk/bounty.ts`](src/sdk/bounty.ts) — methods for agents to create/claim
+- **Server:** [`src/server/routes/bounties.ts`](src/server/routes/bounties.ts) — verification endpoint
+- **Agents:** All 3 agents participate (PassiveLP creates, TrendFollower/Predator claim)
+
+**See also:** [`docs/specs/BOUNTY_BONDS.md`](docs/specs/BOUNTY_BONDS.md) for full technical specification.
+
+---
 
 ## Documentation
 

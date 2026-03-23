@@ -57,3 +57,50 @@ export interface AgentConfig {
   strategy: "PassiveLP" | "TrendFollower" | "Predator";
   initialAllocation: bigint;
 }
+
+// ================================================================
+// Bounty Types (CP-013 Agent 2)
+// ================================================================
+
+export interface BountyCondition {
+  minVolumeUsdc: bigint;      // Minimum USDC volume (6 decimals)
+  targetPriceMin: bigint;     // Min sqrtPriceX96
+  targetPriceMax: bigint;     // Max sqrtPriceX96
+  windowBlocks: bigint;       // Observation window in blocks
+}
+
+export interface BountyRecord {
+  bountyId: bigint;
+  creator: string;            // 0x-prefixed address (checksummed)
+  rewardAmount: bigint;       // USDC (6 decimals)
+  roundId: bigint;
+  conditionHash: string;      // 0x-prefixed hex string (bytes32)
+  condition: BountyCondition;
+  expiresAt: bigint;          // Block number
+  claimed: boolean;
+  claimedBy: string;          // 0x-prefixed address
+  claimTxBlock: bigint;       // Block number when claimed
+}
+
+export interface BountyClaimProof {
+  bountyId: bigint;
+  volume: bigint;             // USDC volume traded
+  avgPrice: bigint;           // sqrtPriceX96
+  blockRange: {
+    startBlock: bigint;
+    endBlock: bigint;
+  };
+}
+
+export interface CreateBountyParams {
+  roundId: bigint;
+  rewardAmount: bigint;
+  condition: BountyCondition;
+}
+
+export interface ClaimBountyResult {
+  txHash: string;
+  bountyId: bigint;
+  claimer: string;            // 0x-prefixed address
+  blockNumber: bigint;
+}

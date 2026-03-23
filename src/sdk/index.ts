@@ -12,6 +12,9 @@ export * from "./router";
 // Borrow flow (3-batch pattern)
 export * from "./borrow-flow";
 
+// Bounty SDK (CP-013)
+export * from "./bounty";
+
 // Configuration
 export const KNOWN_ADDRESSES = {
   POOL_MANAGER: "0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32",

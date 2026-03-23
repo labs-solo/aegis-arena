@@ -12,7 +12,8 @@
     "USDC": "0x74b7f16337b8972027f6196a17a631ac6de26d22",
     "UniversalRouter": "0x35029f7AD06B7d62C4511239d65CEbF0f1124338",
     "AegisPositionManager": "TBD - see docs/guides/POSITION_MANAGER_LOOKUP.md",
-    "ArenaAddress": "TBD - populated after deployment"
+    "ArenaAddress": "TBD - populated after deployment",
+    "Bounty": "TBD"
   },
   "pools": {
     "USDC_WOKB": {

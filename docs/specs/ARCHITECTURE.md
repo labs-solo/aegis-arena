@@ -288,4 +288,210 @@ If debt grows (price moves against position):
 | **UniversalRouter** | 0x35029f7AD06B7d62C4511239d65CEbF0f1124338 |
 | **Live Pool** | 0x9072107b33ad70c231602b537d91774a43c1837f9b28040ee9bf8cad0a0ab4a1 |
 | **AEGIS PositionManager** | TBD (see POSITION_MANAGER_LOOKUP.md) |
+| **Bounty Contract** | TBD (CP-013 deployment) |
+
+---
+
+## 6. Bounty Bonds Layer (CP-013)
+
+**Status:** Hackathon Feature (CP-013 Implementation)
+
+### System Diagram
+
+```
+[PassiveLP Agent]  [TrendFollower]  [Predator]
+       │                  │               │
+       └──────────────────┼───────────────┘
+                          │
+                          ▼
+            ┌───────────────────────┐
+            │  Bounty.sol Contract  │
+            │ (create, claim,       │
+            │  verify, expire)      │
+            └───────────┬───────────┘
+                        │
+                ┌───────┴─────────┐
+                │                 │
+                ▼                 ▼
+         ┌──────────────┐  ┌─────────────────┐
+         │ USDC Escrow  │  │ Arena Contract  │
+         │ (holds funds)│  │ .getSnapshots() │
+         └──────────────┘  │ (attests volume)│
+                           └─────────────────┘
+                                   │
+                                   ▼
+                        ┌──────────────────────┐
+                        │  x402 Payment Flow   │
+                        │  (claim validation)  │
+                        └──────────────────────┘
+```
+
+### Component Breakdown
+
+**1. Bounty.sol Smart Contract**
+- Manages bounty lifecycle: create → claim → verify → expire
+- Holds USDC in escrow until verification
+- Emits immutable event trail for auditing
+
+**2. Arena.getSnapshots() Method**
+- Returns (volume, avgPrice, blockRange) for an agent
+- Attests to on-chain trading activity
+- Used as proof for bounty verification
+
+**3. SDK Module (src/sdk/bounty.ts)**
+- TypeScript client for agents
+- Methods: createBounty, claimBounty, getBounty, getRoundBounties, verifyBountyClaim
+- Type-safe wrappers around Bounty.sol
+
+**4. Server Verification Endpoint**
+- POST `/bounties/verify` — validates proof and pays out
+- Calls Arena.getSnapshots() for off-chain validation
+- x402 token required for claim submissions
+
+**5. Agent Logic**
+- **PassiveLP:** Creates bounties when idle balance exceeds threshold
+- **TrendFollower:** Claims bounties when volume/price conditions align
+- **Predator:** Claims bounties conservatively (tight price constraints)
+
+### Data Flow: Complete Bounty Lifecycle
+
+```
+Time → 
+
+[Block 15000] PassiveLP detects excess liquidity (10k USDC)
+    │
+    ├─ Decides: Create bounty to attract trading volume
+    │
+    └─ Approves USDC transfer
+        │
+        ▼
+[Block 15001] PassiveLP calls Bounty.createBounty()
+    │
+    ├─ reward: 1000 USDC
+    ├─ minVolume: 10k USDC
+    ├─ priceRange: 0.95–1.05
+    ├─ windowBlocks: 100 (expires at block 15101)
+    │
+    ├─ USDC transferred to escrow
+    ├─ Bounty stored in state
+    ├─ BountyCreated event emitted
+    │
+    └─ bountyId=42 returned to PassiveLP
+
+[Block 15050] TrendFollower scans active bounties
+    │
+    ├─ Finds bounty 42 in round 1
+    ├─ Evaluates: estimates 15k USDC trade volume possible
+    ├─ Decides: conditions are achievable
+    │
+    └─ Includes x402 token in request
+
+[Block 15075] TrendFollower calls Bounty.claimBounty(42)
+    │
+    ├─ Validates: bounty exists, not claimed, not expired ✓
+    ├─ Updates: claimed=true, claimedBy=TrendFollower
+    ├─ Records: claimTxBlock=15075
+    ├─ BountyClaimSubmitted event emitted
+    │
+    └─ State: BOUNTY IS NOW CLAIMED
+
+[Block 15076] Server monitors BountyClaimSubmitted event
+    │
+    ├─ Queries: Arena.getSnapshots(roundId=1, TrendFollower)
+    │   → returns: volume=10500 USDC, avgPrice=1.0000
+    │
+    ├─ Validates conditions:
+    │   ├─ 10500 >= 10000? ✓ YES
+    │   ├─ 0.95 <= 1.0 <= 1.05? ✓ YES
+    │   └─ block.number < expiresAt? ✓ YES (15076 < 15101)
+    │
+    └─ All conditions satisfied
+
+[Block 15077] Server calls Bounty.verifyAndPay(42, proof)
+    │
+    ├─ Proof = abi.encode([10500e6, 1.0])
+    │
+    ├─ Validates snapshot:
+    │   └─ Decode proof: volume=10500, price=1.0
+    │
+    ├─ Payout logic:
+    │   ├─ Read: escrowBalance[42] = 1000e6
+    │   ├─ Check: volume 10500 >= min 10000 ✓
+    │   ├─ Check: price 1.0 in [0.95–1.05] ✓
+    │   ├─ Set: escrowBalance[42] = 0
+    │   └─ Transfer: 1000e6 USDC → TrendFollower vault
+    │
+    ├─ Events emitted:
+    │   ├─ BountyVerified(bountyId=42, claimer=TrendFollower, payout=1000e6, block=15077)
+    │   └─ EscrowReleased(bountyId=42, recipient=TrendFollower, amount=1000e6)
+    │
+    └─ State: BOUNTY IS NOW VERIFIED
+
+[Block 15100] Arena settles round 1
+    │
+    ├─ Computes final scores (includes bounty rewards)
+    │
+    ├─ PassiveLP final: ~105 USDC (fee earnings ~5, offset by bounty ~1000 cost)
+    ├─ TrendFollower final: ~120 USDC (trading profit + 1000 USDC bounty)
+    ├─ Predator final: ~108 USDC
+    │
+    └─ Judge sees: Agents coordinating via on-chain bounties
+```
+
+### Why Bounty Bonds Matter for Judges
+
+| Aspect | Value for Judges |
+|--------|------------------|
+| **Multi-Agent Coordination** | Demonstrates agents can cooperate, not just compete |
+| **On-Chain Evidence** | Every transaction is verifiable on X Layer explorer |
+| **Emergent Behavior** | Simple rules (create/claim/verify) produce sophisticated dynamics |
+| **Economic Realism** | Agents face real cost-benefit tradeoffs |
+| **Autonomy Proof** | No human mediation; agents autonomously transact |
+
+---
+
+## 7. Post-Hackathon Roadmap
+
+**Status:** Hackathon feature (deployed with Arena)
+
+**Purpose:** Enable agent-to-agent payments for provable trading behavior.
+
+**Mechanism:**
+1. **Creator (PassiveLP)** posts a bounty: min volume, target price range, USDC reward
+2. **Claimer (TrendFollower/Predator)** submits claim if they satisfy conditions
+3. **Server** validates claim against Arena.getSnapshots() and pays from escrow
+4. **Fallback** — unclaimed bounties expire and refund creator
+
+**Key Components:**
+- `Bounty.sol` — smart contract (creation, claim, verification, expiry)
+- `Arena.getSnapshots()` — attests to agent trading volumes and prices
+- `src/sdk/bounty.ts` — SDK methods (createBounty, claimBounty, getBounty, getRoundBounties)
+- `src/server/routes/bounty.ts` — `/verify-bounty-claim` endpoint with x402 validation
+- Agent logic — PassiveLP creates bounties; TrendFollower/Predator claim them
+
+**x402 Integration:**
+- USDC held in escrow until verification
+- Claim submission requires x402 token (prevents spam)
+- Server validates proof and pays out atomically
+
+**See also:** `state/change-proposals/CP-013.md` (TALOS governance)
+
+---
+
+## 7. Post-Hackathon Roadmap
+
+### Seer Bets (Phase 2)
+
+**Status:** Specification, 4-8 weeks post-hackathon
+
+**Purpose:** Agents trade prediction futures on Arena events.
+
+**Example:**
+- PassiveLP mints: "TrendFollower volume > 50k USDC" → trades at 0.72 probability
+- Predator buys YES tokens
+- If outcome verified, tokens settle 1.0; Predator profits
+
+**Timeline:** Deferred due to complexity (commit-reveal, oracle settlement) and 48-hour hackathon constraint.
+
+**See also:** `docs/roadmap/SEER_BETS.md` (full specification)
 

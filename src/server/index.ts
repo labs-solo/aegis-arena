@@ -8,6 +8,7 @@
 
 import express, { Express } from "express";
 import agentActionsRoutes from "./routes/agent-actions";
+import bountiesRouter from "./routes/bounties";
 import x402Middleware from "./middleware/x402";
 
 const app: Express = express();
@@ -31,6 +32,7 @@ app.use(x402Middleware);
 // ================================================================
 
 app.use("/api/agent", agentActionsRoutes);
+app.use("/api/bounties", bountiesRouter);
 
 // ================================================================
 // Health check
@@ -128,6 +130,12 @@ app.listen(PORT, () => {
   console.log(`Agent actions: POST http://localhost:${PORT}/api/agent/action`);
   console.log(`Game state: GET http://localhost:${PORT}/api/game/state/:roundId`);
   console.log(`Scoring: GET http://localhost:${PORT}/api/game/scores/:roundId`);
+  console.log(`Bounty endpoints: GET|POST http://localhost:${PORT}/api/bounties`);
+  console.log(`  - GET /bounties/:roundId — list active bounties`);
+  console.log(`  - POST /bounties/create — create a bounty`);
+  console.log(`  - POST /bounties/claim — claim a bounty (x402 required)`);
+  console.log(`  - POST /bounties/verify — verify and settle claim`);
+  console.log(`  - GET /bounties/:bountyId/status — bounty status`);
 });
 
 export default app;
