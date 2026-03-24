@@ -1,8 +1,8 @@
-# Finding the AEGIS PositionManager Address
+# AEGIS PositionManager Address Reference
 
-The `AegisDeployConfig.sol` file requires the **PositionManager address** from aegis-engine PR #18 (`trail-of-bits-audit-fixes-and-improvements`).
+**PositionManager Address:** `0xcF1EAFC6928dC385A342E7C6491d371d2871458b`
 
-This guide explains how to locate it.
+This is the confirmed PositionManager address from AEGIS Engine PR #18 (`trail-of-bits-audit-fixes-and-improvements`) deployed on X Layer (Chain 196).
 
 ## Why PositionManager Matters
 

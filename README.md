@@ -76,17 +76,54 @@ Uniswap v4 (X Layer)
 
 ## Deployed Addresses (X Layer, Chain ID 196)
 
+### Uniswap v4 Infrastructure
 | Contract | Address |
 |----------|---------|
 | **PoolManager** | `0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32` |
-| **StateView** | `0x76fd297e2d437cd7f76d50f01afe6160f86e9990` |
 | **Permit2** | `0x000000000022D473030F116dDEE9F6B43aC78BA3` |
+| **UniversalRouter** | `0x35029f7AD06B7d62C4511239d65CEbF0f1124338` |
+
+### AEGIS Engine Contracts
+| Contract | Address |
+|----------|---------|
+| **AegisEngine** | `0x1b0ed1d21b5AB3Db311C1aC386DC874081914935` |
+| **AegisHook** | `0xc54aC33a60BeED0c10C32D8E4434166AF68550cc` |
+| **AegisRouterV1** | `0xb2830032E19A85e03cDE678FF93Da659C90CAFe5` |
+| **AegisStateView** | `0xE962612Dc9dcC3a7666F5Fa6B014b3b1D9287D27` |
+| **VaultRegistry** | `0xe19414e5C3DB1596f583d18d3Ac5bb43CBabc50D` |
+| **OracleManager** | `0x355dAd86872DE8248538E487Ef8898e0a4E31f70` |
+| **LimitOrderManager** | `0xCc7F9dC1C6BA855E2507c9C65910B48A7F6497C1` |
+| **DynamicFeeManager** | `0xA5571554A47deDEb667f91d60ADCb645a2Ef1780` |
+| **VariableInterestRate** | `0xCCDECda074d8411651AC1B8FD87c5CA7551f28F6` |
+| **PositionManager** | `0xcF1EAFC6928dC385A342E7C6491d371d2871458b` |
+
+### Tokens & Pools
+| Contract | Address |
+|----------|---------|
 | **WOKB** | `0xe538905cf8410324e03A5A23C1c177a474D59b2b` |
 | **USDC** | `0x74b7f16337b8972027f6196a17a631ac6de26d22` |
-| **UniversalRouter** | `0x35029f7AD06B7d62C4511239d65CEbF0f1124338` |
 | **Pool (USDC/WOKB, 5bps)** | `0x9072107b33ad70c231602b537d91774a43c1837f9b28040ee9bf8cad0a0ab4a1` |
-| **AEGIS PositionManager** | **See [`docs/guides/POSITION_MANAGER_LOOKUP.md`](docs/guides/POSITION_MANAGER_LOOKUP.md)** |
+
+### Arena Contracts
+| Contract | Address |
+|----------|---------|
 | **Arena.sol** | TBD (after deployment via `npm run deploy`) |
+
+---
+
+## Hackathon Primary Market
+
+**OKB / USD₮0 Pool** (X Layer, Chain 196)
+
+| Attribute | Value |
+|-----------|-------|
+| **Pool ID** | `0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4` |
+| **Token 0** | Native OKB (`0x0000000000000000000000000000000000000000`) |
+| **Token 1** | USD₮0 (`0x779Ded0c9e1022225f8E0630b35a9b54bE713736`, 6 decimals) |
+| **Hook** | AEGIS Hook (`0xc54aC33a60BeED0c10C32D8E4434166AF68550cc`) |
+| **Chain ID** | 196 |
+
+This pool is the primary market for the AEGIS hackathon competition. Agents trade and provide liquidity on this pool to earn fees, fees, and bounty rewards.
 
 ## Agent Strategies
 

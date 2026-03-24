@@ -42,13 +42,38 @@ library AegisDeployConfig {
   uint24 public constant POOL_FEE = 500;
 
   // ================================================================
-  // AEGIS Engine PositionManager
+  // AEGIS Engine Contracts — X Layer (Chain 196) — 2026-03-24
   // ================================================================
 
-  /// @notice **CRITICAL: Set from aegis-engine PR #18 (trail-of-bits-audit-fixes-and-improvements)**
-  /// @dev Instructions: See docs/guides/POSITION_MANAGER_LOOKUP.md
-  /// @dev This address enables debt modification with safe PositionManager unlock
-  address public constant POSITION_MANAGER = address(0);  // TODO: Update with correct address from PR #18
+  /// @notice AEGIS Engine main contract
+  address public constant AEGIS_ENGINE = 0x1b0ed1d21b5AB3Db311C1aC386DC874081914935;
+
+  /// @notice AEGIS Hook (Uniswap v4 hook for AEGIS Engine)
+  address public constant AEGIS_HOOK = 0xc54aC33a60BeED0c10C32D8E4434166AF68550cc;
+
+  /// @notice AEGIS Router V1 (routing and swap execution)
+  address public constant AEGIS_ROUTER_V1 = 0xb2830032E19A85e03cDE678FF93Da659C90CAFe5;
+
+  /// @notice AEGIS State View contract
+  address public constant AEGIS_STATE_VIEW = 0xE962612Dc9dcC3a7666F5Fa6B014b3b1D9287D27;
+
+  /// @notice Vault Registry (position and vault tracking)
+  address public constant VAULT_REGISTRY = 0xe19414e5C3DB1596f583d18d3Ac5bb43CBabc50D;
+
+  /// @notice Oracle Manager (price feeds and oracle coordination)
+  address public constant ORACLE_MANAGER = 0x355dAd86872DE8248538E487Ef8898e0a4E31f70;
+
+  /// @notice Limit Order Manager (limit order execution)
+  address public constant LIMIT_ORDER_MANAGER = 0xCc7F9dC1C6BA855E2507c9C65910B48A7F6497C1;
+
+  /// @notice Dynamic Fee Manager (fee curve management)
+  address public constant DYNAMIC_FEE_MANAGER = 0xA5571554A47deDEb667f91d60ADCb645a2Ef1780;
+
+  /// @notice Variable Interest Rate contract (rate calculations)
+  address public constant VARIABLE_INTEREST_RATE = 0xCCDECda074d8411651AC1B8FD87c5CA7551f28F6;
+
+  /// @notice PositionManager — manages debt modifications with safe PositionManager unlock
+  address public constant POSITION_MANAGER = 0xcF1EAFC6928dC385A342E7C6491d371d2871458b;
 
   // ================================================================
   // AEGIS Router Opcode Constants (VERIFIED - DO NOT MODIFY)

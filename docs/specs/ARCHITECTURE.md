@@ -575,6 +575,51 @@ Time →
 
 ---
 
+## 8. Deployed Contract Addresses (X Layer, Chain 196)
+
+All contracts are deployed and verified on X Layer (Chain ID 196). RPC: `https://rpc.xlayer.tech`
+
+### AEGIS Engine Contracts
+
+| Contract | Address | Purpose |
+|----------|---------|---------|
+| **AegisEngine** | `0x1b0ed1d21b5AB3Db311C1aC386DC874081914935` | Core AEGIS lending protocol |
+| **AegisHook** | `0xc54aC33a60BeED0c10C32D8E4434166AF68550cc` | Uniswap v4 hook for AEGIS integration |
+| **AegisRouterV1** | `0xb2830032E19A85e03cDE678FF93Da659C90CAFe5` | Routing and swap execution |
+| **AegisStateView** | `0xE962612Dc9dcC3a7666F5Fa6B014b3b1D9287D27` | State query contract (read-only) |
+| **VaultRegistry** | `0xe19414e5C3DB1596f583d18d3Ac5bb43CBabc50D` | Position and vault tracking |
+| **OracleManager** | `0x355dAd86872DE8248538E487Ef8898e0a4E31f70` | Price feeds and oracle coordination |
+| **LimitOrderManager** | `0xCc7F9dC1C6BA855E2507c9C65910B48A7F6497C1` | Limit order execution |
+| **DynamicFeeManager** | `0xA5571554A47deDEb667f91d60ADCb645a2Ef1780` | Fee curve management |
+| **VariableInterestRate** | `0xCCDECda074d8411651AC1B8FD87c5CA7551f28F6` | Rate calculations for borrowing |
+| **PositionManager** | `0xcF1EAFC6928dC385A342E7C6491d371d2871458b` | Debt modification (critical for Arena) |
+
+### Uniswap v4 & Token Contracts
+
+| Contract | Address | Purpose |
+|----------|---------|---------|
+| **PoolManager** | `0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32` | Uniswap v4 core |
+| **Permit2** | `0x000000000022D473030F116dDEE9F6B43aC78BA3` | Token approval standard |
+| **UniversalRouter** | `0x35029f7AD06B7d62C4511239d65CEbF0f1124338` | Uniswap v4 routing |
+| **WOKB** | `0xe538905cf8410324e03A5A23C1c177a474D59b2b` | Wrapped native OKB token |
+| **USDC** | `0x74b7f16337b8972027f6196a17a631ac6de26d22` | Circle USDC stablecoin |
+
+### Primary Market Pools
+
+| Attribute | Value |
+|-----------|-------|
+| **USDC/WOKB (5 bps)** | `0x9072107b33ad70c231602b537d91774a43c1837f9b28040ee9bf8cad0a0ab4a1` |
+| **OKB/USD₮0 (Hackathon)** | `0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4` |
+
+### Arena Deployment
+
+| Contract | Address | Notes |
+|----------|---------|-------|
+| **Arena.sol** | TBD | Deploy after AEGIS contracts verified |
+| **Bounty.sol** | TBD | Deployed with Arena |
+
+---
+
 ## 7. Post-Hackathon Roadmap
 
 ### Seer Bets (Phase 2)
