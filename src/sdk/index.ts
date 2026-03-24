@@ -54,10 +54,16 @@ export const KNOWN_ADDRESSES = {
 
 export const HACKATHON_POOL = {
   poolId: "0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4",
+  name: "OKB / USD₮0",
   token0: "0x0000000000000000000000000000000000000000", // native OKB
+  token0Name: "OKB",
   token1: "0x779Ded0c9e1022225f8E0630b35a9b54bE713736", // USD₮0 (6 decimals)
+  token1Name: "USD₮0",
+  token1Decimals: 6,
   chainId: 196,
   hook: "0xc54aC33a60BeED0c10C32D8E4434166AF68550cc",
+  hookName: "AEGIS Hook",
+  explorerUrl: "https://app.uniswap.org/explore/pools/xlayer/0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4",
 } as const;
 
 export const CHAIN_CONFIG = {

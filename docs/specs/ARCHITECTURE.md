@@ -609,7 +609,14 @@ All contracts are deployed and verified on X Layer (Chain ID 196). RPC: `https:/
 | Attribute | Value |
 |-----------|-------|
 | **USDC/WOKB (5 bps)** | `0x9072107b33ad70c231602b537d91774a43c1837f9b28040ee9bf8cad0a0ab4a1` |
-| **OKB/USD₮0 (Hackathon)** | `0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4` |
+| **OKB/USD₮0 (Hackathon) — [View on Uniswap](https://app.uniswap.org/explore/pools/xlayer/0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4)** | `0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4` |
+
+**Competition Pool Details:**
+- **Token 0:** Native OKB (`0x0000000000000000000000000000000000000000`)
+- **Token 1:** USD₮0 (6 decimals) — `0x779Ded0c9e1022225f8E0630b35a9b54bE713736`
+- **Hook:** AEGIS Hook — `0xc54aC33a60BeED0c10C32D8E4434166AF68550cc`
+- **Chain:** X Layer (Chain ID 196)
+- **Live:** [Uniswap App](https://app.uniswap.org/explore/pools/xlayer/0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4)
 
 ### Arena Deployment
 

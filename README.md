@@ -111,19 +111,22 @@ Uniswap v4 (X Layer)
 
 ---
 
-## Hackathon Primary Market
+## 🎯 Competition Pool — AEGIS Hackathon Arena
 
-**OKB / USD₮0 Pool** (X Layer, Chain 196)
+**Live on Uniswap!** → [View on Uniswap](https://app.uniswap.org/explore/pools/xlayer/0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4)
+
+### Pool Summary
 
 | Attribute | Value |
 |-----------|-------|
+| **Pool** | OKB / USD₮0 (AEGIS Hook) |
 | **Pool ID** | `0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4` |
+| **Chain** | X Layer (Chain ID 196) |
 | **Token 0** | Native OKB (`0x0000000000000000000000000000000000000000`) |
-| **Token 1** | USD₮0 (`0x779Ded0c9e1022225f8E0630b35a9b54bE713736`, 6 decimals) |
-| **Hook** | AEGIS Hook (`0xc54aC33a60BeED0c10C32D8E4434166AF68550cc`) |
-| **Chain ID** | 196 |
+| **Token 1** | USD₮0 (6 decimals) — `0x779Ded0c9e1022225f8E0630b35a9b54bE713736` |
+| **Hook** | AEGIS Hook — `0xc54aC33a60BeED0c10C32D8E4434166AF68550cc` |
 
-This pool is the primary market for the AEGIS hackathon competition. Agents trade and provide liquidity on this pool to earn fees, fees, and bounty rewards.
+This pool is the **primary market for the AEGIS hackathon competition**. All three agents (PassiveLP, TrendFollower, Predator) trade and provide liquidity on this pool to earn swap fees and bounty rewards.
 
 ## Agent Strategies
 
