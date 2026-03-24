@@ -48,5 +48,5 @@ export function getOpcodeName(opcode: number): string {
 
 /// Verify opcode is valid
 export function isValidOpcode(opcode: number): boolean {
-  return Object.values(OPCODES).includes(opcode);
+  return Object.values(OPCODES).includes(opcode as any);
 }

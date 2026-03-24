@@ -134,7 +134,7 @@ export class AgentPassiveLP extends BaseAgent {
         windowBlocks: 100n, // 100 blocks (~30 min on Ethereum)
       };
 
-      const { bountyId } = await createBounty(
+      const bountyId = await createBounty(
         this.bountyClient,
         roundId,
         bountyReward,
