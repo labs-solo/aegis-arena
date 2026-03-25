@@ -2,7 +2,7 @@
   "network": "xlayer",
   "chainId": 196,
   "rpc": "https://rpc.xlayer.tech",
-  "deployed": false,
+  "deployed": true,
   "comment": "Set deployed=true and fill in ArenaAddress after running deployment-guide.sh",
   "uniswapV4": {
     "PoolManager": "0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32",
@@ -27,8 +27,12 @@
     "UDSC": "0x779Ded0c9e1022225f8E0630b35a9b54bE713736"
   },
   "arena": {
-    "ArenaAddress": "",
-    "Bounty": ""
+    "ArenaAddress": "0x1e27EE1aa171845CE2523a867Fc5114318916d61",
+    "Bounty": "0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816",
+    "ArenaDeployTx": "0xd95991873a4d8713e14b8b188a9abdb3911a89710ddfbb735152e88556d06ad7",
+    "BountyDeployTx": "0x3921546eb3535291d6cd9892132f69dc48e91938c592c8f64e1dbf9a69ee454d",
+    "deployedAt": "2026-03-24",
+    "deployedBy": "0x71632aA7C30D6A1644e5Db13d245bd195A08b70b"
   },
   "pools": {
     "USDC_WOKB": {
@@ -41,16 +45,16 @@
     },
     "hackathonPrimaryMarket": {
       "id": "0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4",
-      "name": "OKB / USD₮0",
+      "name": "OKB / USD\u20ae0",
       "token0": "0x0000000000000000000000000000000000000000",
       "token0Name": "OKB",
       "token1": "0x779Ded0c9e1022225f8E0630b35a9b54bE713736",
-      "token1Name": "USD₮0",
+      "token1Name": "USD\u20ae0",
       "token1Decimals": 6,
       "chainId": 196,
       "hook": "0xc54aC33a60BeED0c10C32D8E4434166AF68550cc",
       "hookName": "AEGIS Hook",
-      "description": "OKB/USD₮0 pool for AEGIS hackathon competition on X Layer",
+      "description": "OKB/USD\u20ae0 pool for AEGIS hackathon competition on X Layer",
       "uniswapExplorer": "https://app.uniswap.org/explore/pools/xlayer/0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4"
     }
   }
