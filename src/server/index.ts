@@ -1,141 +1,55 @@
-/// AEGIS Arena Server
-///
-/// Express.js orchestration server for:
-/// - Agent action submission
-/// - Game state queries
-/// - x402 payment integration
-/// - Scoring endpoints
+// src/server/index.ts
+// CP-020: Fix error handler arity (LOW-01) — 4 params required for Express error middleware
+// CP-020: Remove global x402 — applied per-route in routes/bounties.ts
+// CP-020: Factory function (accepts orchestrator and bountyClient as params)
 
-import express, { Express } from "express";
-import agentActionsRoutes from "./routes/agent-actions";
-import bountiesRouter from "./routes/bounties";
-import x402Middleware from "./middleware/x402";
+import express from "express";
+import { GameOrchestrator } from "../orchestrator/game-loop.js";
+import { BountyClient } from "../contracts/bounty.js";
+import { createAgentActionsRouter } from "./routes/agent-actions.js";
+import { createBountiesRouter } from "./routes/bounties.js";
 
-const app: Express = express();
-const PORT = process.env.SERVER_PORT || 3000;
-const HOST = process.env.SERVER_HOST || "0.0.0.0";
+export function createServer(
+  orchestrator: GameOrchestrator,
+  bountyClient: BountyClient
+): express.Express {
+  const app = express();
+  app.use(express.json());
 
-// ================================================================
-// Middleware
-// ================================================================
+  // CP-020: x402 middleware NOT applied globally here
+  // Applied only on /api/bounties/claim in routes/bounties.ts
 
-// Parse JSON request bodies
-app.use(express.json());
+  app.use("/api/agent", createAgentActionsRouter(orchestrator));
+  app.use("/api/bounties", createBountiesRouter(bountyClient));
 
-// x402 payment middleware
-// - Allows GET requests (free)
-// - Requires x402 token for POST requests
-app.use(x402Middleware);
-
-// ================================================================
-// Routes
-// ================================================================
-
-app.use("/api/agent", agentActionsRoutes);
-app.use("/api/bounties", bountiesRouter);
-
-// ================================================================
-// Health check
-// ================================================================
-
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    timestamp: new Date().toISOString(),
-    service: "AEGIS Arena",
+  app.get("/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString(), service: "AEGIS Arena" });
   });
-});
 
-// ================================================================
-// Game state endpoints (public)
-// ================================================================
-
-app.get("/api/game/state/:roundId", async (req, res) => {
-  try {
-    const roundId = parseInt(req.params.roundId);
-
-    // In production: query Arena contract
-    // Arena.getRoundState(roundId) returns:
-    // - startTime, endTime, roundDuration, settled, agents[]
-
-    const mockState = {
-      roundId,
-      startTime: Math.floor(Date.now() / 1000),
-      endTime: Math.floor(Date.now() / 1000) + 3600,
-      roundDuration: 3600,
-      settled: false,
-      agents: [
-        "0x1111111111111111111111111111111111111111",
-        "0x2222222222222222222222222222222222222222",
-        "0x3333333333333333333333333333333333333333",
-      ],
-    };
-
-    res.json(mockState);
-  } catch (err) {
-    res.status(500).json({
-      error: "Failed to fetch game state",
-      details: String(err),
-    });
-  }
-});
-
-// ================================================================
-// Scoring endpoints
-// ================================================================
-
-app.get("/api/game/scores/:roundId", async (req, res) => {
-  try {
-    const roundId = parseInt(req.params.roundId);
-
-    // In production: query Arena.getFinalScores(roundId)
-    // Returns: agentsRanked[], scores[], prizes[]
-
-    const mockScores = {
-      roundId,
-      settled: false,
-      agentsRanked: [],
-      scores: [],
-      prizes: [],
-    };
-
-    res.json(mockScores);
-  } catch (err) {
-    res.status(500).json({
-      error: "Failed to fetch scores",
-      details: String(err),
-    });
-  }
-});
-
-// ================================================================
-// Error handling
-// ================================================================
-
-app.use((err: any, req: express.Request, res: express.Response) => {
-  console.error("Unhandled error:", err);
-  res.status(500).json({
-    error: "Internal server error",
-    details: String(err.message),
+  // Game state (Phase 2: wire to ArenaClient)
+  app.get("/api/game/state/:roundId", async (req, res) => {
+    res.json({ roundId: parseInt(req.params.roundId), status: "Phase2: wire to ArenaClient" });
   });
-});
 
-// ================================================================
-// Start server
-// ================================================================
+  // CP-020 FIX (LOW-01): Error handler with correct arity — 4 params required.
+  // Express identifies error middleware by the 4-parameter signature.
+  // With 3 params, Express treats it as regular middleware and errors propagate unhandled.
+  app.use(
+    (
+      err: Error,
+      _req: express.Request,
+      res: express.Response,
+      _next: express.NextFunction  // required 4th param
+    ) => {
+      console.error("[Server] Unhandled error:", err);
+      res.status(500).json({
+        error: "Internal server error",
+        message: process.env.NODE_ENV === "development" ? err.message : undefined,
+      });
+    }
+  );
 
-app.listen(PORT, () => {
-  console.log(`AEGIS Arena server listening on ${HOST}:${PORT}`);
-  console.log(`Health check: http://localhost:${PORT}/health`);
-  console.log(`Agent actions: POST http://localhost:${PORT}/api/agent/action`);
-  console.log(`Game state: GET http://localhost:${PORT}/api/game/state/:roundId`);
-  console.log(`Scoring: GET http://localhost:${PORT}/api/game/scores/:roundId`);
-  console.log(`Bounty endpoints: GET|POST http://localhost:${PORT}/api/bounties`);
-  console.log(`  - GET /bounties/:roundId — list active bounties`);
-  console.log(`  - POST /bounties/create — create a bounty`);
-  console.log(`  - POST /bounties/claim — claim a bounty (x402 required)`);
-  console.log(`  - POST /bounties/verify — verify and settle claim`);
-  console.log(`  - GET /bounties/:bountyId/status — bounty status`);
-});
+  return app;
+}
 
-export default app;
+export default createServer;
