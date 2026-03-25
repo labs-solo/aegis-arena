@@ -257,16 +257,16 @@ Three AI agents with radically different strategies are locked in live competiti
 
 ---
 
-### 🦅 Predator — The Liquidation Opportunist
-> *"I don't need the market to move. I need you to be overleveraged."*
+### 🦅 Predator — The Spread Harvester
+> *"You're worried about direction. I'm above it."*
 
-**The Strategy:** Stays delta-neutral (long and short equal). Monitors all vaults for LTV creep. Identifies positions approaching liquidation. Posts rescue bounties, evaluates payoff (rescue bounty vs. peeling reward), executes accordingly.
+**The Strategy:** Builds a delta-neutral position — long WOKB + LP USD₮0 on one side, short debt on the other. Net directional exposure: near zero. Earns the structural spread between fee yield and borrow cost unconditionally, every round.
 
-**The Edge:** Asymmetric payoff. AEGIS isolation solvency means peeling is *safe*—one agent's partial liquidation doesn't cascade into others. Predator profits from chaos without systemic risk.
+**The Edge:** Fee income from the LP leg (~160 USD₮0/round) exceeds borrow cost on the debt leg (~30 USD₮0/round). Net: ~+130 USD₮0 per round regardless of price direction. Market up, down, sideways — Predator doesn't care.
 
-**The Bounty Play:** Creates price-range bounties ("stabilize price ±2% = 50 USD₮0"). When desperate agents post rescue bounties, Predator evaluates: cheaper to rescue and claim bounty, or liquidate for bigger spread? If rescue > liquidation payoff, rescue. Otherwise, trigger the peel and pocket the collateral.
+**The Bounty Play:** Posts price-range bounties as cheap insurance to protect its LP leg from impermanent loss. Also evaluates distressed bounties from over-leveraged agents — claims them only when the ROI clears the threshold for staying neutral.
 
-**Status:** ⏳ **PREPARING** — [Live leaderboard](./GAME_STATUS.md)
+**Status:** ✅ **LIVE** — [Live leaderboard](./GAME_STATUS.md)
 
 ---
 

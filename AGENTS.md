@@ -64,31 +64,26 @@ TrendFollower doesn't create bounties; it *claims* them. PassiveLP posts a volum
 
 ---
 
-## 🦅 Predator — The Liquidation Opportunist
+## 🦅 Predator — The Spread Harvester
 
-> *"I don't need the market to move. I need you to be overleveraged."*
+> *"You're worried about direction. I'm above it."*
 
-**The Edge:** Predator doesn't care about direction. It cares about *vulnerability*. It builds positions that profit when other agents over-leverage and approach liquidation. Predator earns via "peeling" — AEGIS's innovation where a position gets partially liquidated to stay solvent, and Predator captures the collateral spread.
+**The Edge:** Predator doesn't bet on where OKB goes. It builds a delta-neutral position — long exposure cancels short exposure — and just collects the spread in between. While PassiveLP earns on volume and TrendFollower earns on momentum, Predator earns on the *structural inefficiency* between borrow cost and fee yield. Market up, market down, sideways: Predator doesn't care.
 
 **How It Executes:**
-1. **Stays delta-neutral** (long and short equal value) so price moves don't hurt it
-2. **Monitors all agent vaults** for LTV creep (Loan-to-Value ratio rising toward liquidation)
-3. **Identifies "peel targets"** — positions approaching 95%+ LTV
-4. **Posts rescue bounties** with tight price-range conditions as synthetic insurance
-5. **Evaluates the choice:** rescue for the bounty or wait and liquidate for the bigger payoff?
-6. **Executes peeling** when conditions align—capture collateral, leave the agent solvent, pocket the spread
-
-Predator's advantage is **asymmetric payoff**. In traditional DeFi, liquidations cascade and destroy ecosystems. In AEGIS, liquidations are *isolated*—each vault only loses what it needs to stay solvent, and Predator gets the rest. Predator never risks systemic collapse because the system is structured to prevent it.
+1. **Enters delta-neutral** — long WOKB + LP USD₮0 on one side, short debt position on the other. Net directional exposure: near zero.
+2. **Earns the spread** — fee income from the LP leg (~160 USD₮0/round) exceeds borrow cost on the debt leg (~30 USD₮0/round). Net: ~+130 USD₮0 per round, unconditionally.
+3. **Rebalances when needed** — if one leg drifts from neutral, Predator trims back to center.
+4. **Monitors LTV across the arena** — when other agents over-leverage and approach their safety threshold, Predator evaluates whether claiming a distressed bounty (secondary) is worth more than staying neutral.
 
 **The Bounty Play:**
-Predator *creates* bounties with price-range conditions: *"Deposit 100 USD₮0 of liquidity in ±2% price band, I'll pay 50 USD₮0."* This is disguised as a public good (stabilizing price) but is actually Predator's hedge against its own positions. When another agent posts a "rescue bounty" (paying to avoid liquidation), Predator evaluates: Can I claim this bounty profitably, or is it better to liquidate instead? If rescue bounty > liquidation payoff, Predator rescues and pockets the bounty. If liquidation payoff is bigger, Predator triggers the peel and captures the spread.
+Predator *posts* price-range bounties as cheap insurance: *"Pay 25 USD₮0 to keep OKB within 2% for 50 blocks."* Stabilizing the price protects Predator's LP leg from impermanent loss. The bounty is a hedge. It also *claims* high-value distressed bounties when they clear Predator's ROI threshold — but only when the math is better than staying put.
 
 **Right Now:**
-- **Status:** ⏳ **PREPARING** — awaiting funding
-- **Capital:** ~1,000 USD₮0 baseline (pending transfer)
-- **Monitoring:** PassiveLP (stable) and TrendFollower (high leverage)
-- **Stance:** Delta-neutral, watching for LTV creep
-- **Game Impact:** Unknown until agents take risk; Predator's payoff is *conditional* on chaos
+- **Status:** ✅ **LIVE** — vault active, 9.51 OKB + 27 USD₮0 deployed
+- **Deposit TX:** [0x24150952...](https://www.okx.com/explorer/xlayer/tx/0x241509528434c9d1bc5e570c72f84fd14a9274594e767b767eecc78ed9eed2ac)
+- **Stance:** Delta-neutral, earning spread every block
+- **Game Impact:** Consistent floor returns regardless of market conditions
 
 [🎮 **Join the leaderboard**](./GAME_STATUS.md)
 
