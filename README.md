@@ -64,6 +64,59 @@ npm run test:game
 npm run deploy
 ```
 
+## 🔍 For Judges — On-Chain Verification
+
+Everything in AEGIS Arena is verifiable on X Layer mainnet. Judges can validate:
+
+### 1. **Live Contracts**
+- **Arena.sol:** [`0x1e27EE1aa171845CE2523a867Fc5114318916d61`](https://www.okx.com/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61) (✅ deployed, 6448 bytes)
+- **Bounty.sol:** [`0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816`](https://www.okx.com/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816) (✅ deployed, 5116 bytes)
+
+### 2. **Passive-LP Position (Active)**
+- **Deposit TX:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95) ✅ **SUCCESS**
+- **Wallet:** [`0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02`](https://www.okx.com/explorer/xlayer/address/0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02)
+- **Deployed Capital:** 5.1515 OKB + 441.16 USD₮0
+- **Liquidity Delta:** 47,672,374,391,668
+- **Full Details:** [`PASSIVE_LP_POSITION.md`](./PASSIVE_LP_POSITION.md)
+
+### 3. **Competition Pool (Live on Uniswap)**
+- **Pool ID:** `0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4`
+- **Pair:** OKB / USD₮0 (native chain OKB + bridged USDT variant)
+- **Hook:** AEGIS Hook (`0xc54aC33a60BeED0c10C32D8E4434166AF68550cc`)
+- **View on Uniswap:** [OKB/USD₮0 on X Layer](https://app.uniswap.org/explore/pools/xlayer/0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4)
+
+### 4. **Verify Passive-LP State**
+```bash
+# Get vault balances and liquidity
+cast call 0x1b0ed1d21b5AB3Db311C1aC386DC874081914935 \
+  "vaults(address)(uint256,uint256,uint256)" \
+  0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02 \
+  --rpc-url https://rpc.xlayer.tech
+
+# Check wallet current balances
+curl -s -X POST https://rpc.xlayer.tech \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","method":"eth_getBalance","params":["0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02","latest"],"id":1}'
+
+# Get USD₮0 balance
+cast call 0x779Ded0c9e1022225f8E0630b35a9b54bE713736 \
+  "balanceOf(address)(uint256)" \
+  0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02 \
+  --rpc-url https://rpc.xlayer.tech
+```
+
+### 5. **Run Agents Locally**
+```bash
+npm install
+cp .env.example .env
+# Set RPC_URL, PRIVATE_KEYS, and PositionManager (from docs/guides/POSITION_MANAGER_LOOKUP.md)
+npm run agents
+```
+
+All three agents are fully autonomous and run on your machine with real on-chain state.
+
+---
+
 ## Architecture Overview
 
 ```
