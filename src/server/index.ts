@@ -10,6 +10,7 @@ import express, { Express } from "express";
 import agentActionsRoutes from "./routes/agent-actions";
 import bountiesRouter from "./routes/bounties";
 import x402Middleware from "./middleware/x402";
+import { createArenaClientFromConfig, createArenaServiceConfigFromEnv } from "./services/arena";
 
 const app: Express = express();
 const PORT = process.env.SERVER_PORT || 3000;
@@ -52,26 +53,32 @@ app.get("/health", (req, res) => {
 
 app.get("/api/game/state/:roundId", async (req, res) => {
   try {
-    const roundId = parseInt(req.params.roundId);
+    const roundId = BigInt(req.params.roundId);
+    const arenaClient = createArenaClientFromConfig(createArenaServiceConfigFromEnv(process.env));
+    const roundState = await arenaClient.getRoundState(roundId);
+    const agentStates = await Promise.all(
+      roundState.agents.map(async (agent) => ({
+        agent,
+        execution: await arenaClient.getAgentExecutionState(roundId, agent),
+      }))
+    );
 
-    // In production: query Arena contract
-    // Arena.getRoundState(roundId) returns:
-    // - startTime, endTime, roundDuration, settled, agents[]
-
-    const mockState = {
-      roundId,
-      startTime: Math.floor(Date.now() / 1000),
-      endTime: Math.floor(Date.now() / 1000) + 3600,
-      roundDuration: 3600,
-      settled: false,
-      agents: [
-        "0x1111111111111111111111111111111111111111",
-        "0x2222222222222222222222222222222222222222",
-        "0x3333333333333333333333333333333333333333",
-      ],
-    };
-
-    res.json(mockState);
+    res.json({
+      ...roundState,
+      agents: agentStates.map(({ agent }) => agent),
+      agentStates: agentStates.map(({ agent, execution }) => ({
+        agent,
+        vaultId: execution.vaultId.toString(),
+        executionCount: execution.executionCount.toString(),
+        actionCount: execution.actionCount.toString(),
+        cumulativeVolumeUsdc: execution.cumulativeVolumeUsdc.toString(),
+        latestAvgPriceX96: execution.latestAvgPriceX96.toString(),
+        lastExecutionBlock: execution.lastExecutionBlock.toString(),
+        lastSurface: execution.lastSurface,
+        lastBatchHash: execution.lastBatchHash,
+        lastProofEligible: execution.lastProofEligible,
+      })),
+    });
   } catch (err) {
     res.status(500).json({
       error: "Failed to fetch game state",
@@ -86,20 +93,44 @@ app.get("/api/game/state/:roundId", async (req, res) => {
 
 app.get("/api/game/scores/:roundId", async (req, res) => {
   try {
-    const roundId = parseInt(req.params.roundId);
+    const roundId = BigInt(req.params.roundId);
+    const arenaClient = createArenaClientFromConfig(createArenaServiceConfigFromEnv(process.env));
+    const roundState = await arenaClient.getRoundState(roundId);
 
-    // In production: query Arena.getFinalScores(roundId)
-    // Returns: agentsRanked[], scores[], prizes[]
+    if (roundState.settled) {
+      const finalScores = await arenaClient.getFinalScores(roundId);
+      return res.json({
+        roundId: roundState.roundId,
+        settled: true,
+        scoreBasis: "arena_settlement",
+        agentsRanked: finalScores.agentsRanked,
+        scores: finalScores.scores.map((value) => value.toString()),
+        prizes: finalScores.prizes.map((value) => value.toString()),
+      });
+    }
 
-    const mockScores = {
-      roundId,
+    const liveStates = await Promise.all(
+      roundState.agents.map(async (agent) => ({
+        agent,
+        state: await arenaClient.getAgentExecutionState(roundId, agent),
+      }))
+    );
+    liveStates.sort((left, right) => {
+      if (right.state.cumulativeVolumeUsdc === left.state.cumulativeVolumeUsdc) {
+        return 0;
+      }
+      return right.state.cumulativeVolumeUsdc > left.state.cumulativeVolumeUsdc ? 1 : -1;
+    });
+
+    res.json({
+      roundId: roundState.roundId,
       settled: false,
-      agentsRanked: [],
-      scores: [],
+      scoreBasis: "arena_reported_execution_volume",
+      settlementStatus: "final economic settlement not implemented on-chain; reporting Arena-backed execution volume until settle() is upgraded",
+      agentsRanked: liveStates.map(({ agent }) => agent),
+      scores: liveStates.map(({ state }) => state.cumulativeVolumeUsdc.toString()),
       prizes: [],
-    };
-
-    res.json(mockScores);
+    });
   } catch (err) {
     res.status(500).json({
       error: "Failed to fetch scores",
@@ -127,7 +158,9 @@ app.use((err: any, req: express.Request, res: express.Response) => {
 app.listen(PORT, () => {
   console.log(`AEGIS Arena server listening on ${HOST}:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
+  console.log(`Agent registration: POST http://localhost:${PORT}/api/agent/register`);
   console.log(`Agent actions: POST http://localhost:${PORT}/api/agent/action`);
+  console.log(`Arena bindings: GET http://localhost:${PORT}/api/agent/bindings/:roundId`);
   console.log(`Game state: GET http://localhost:${PORT}/api/game/state/:roundId`);
   console.log(`Scoring: GET http://localhost:${PORT}/api/game/scores/:roundId`);
   console.log(`Bounty endpoints: GET|POST http://localhost:${PORT}/api/bounties`);

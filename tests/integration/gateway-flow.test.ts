@@ -74,6 +74,7 @@ describe("Gateway Flow Integration", () => {
       signer,
       gatewayClient // Provide gateway
     );
+    agent.bindRegisteredVaultId("501");
   });
 
   // ================================================================
@@ -237,6 +238,7 @@ describe("Gateway Flow Integration", () => {
       signer
       // NO gatewayClient
     );
+    agentNoGateway.bindRegisteredVaultId("777");
 
     const encodedActions = ["0x1234", "0x5678"];
     const roundId = BigInt(1);
@@ -303,6 +305,7 @@ describe("Gateway Flow Integration", () => {
       signer,
       gatewayClient
     );
+    namedAgent.bindRegisteredVaultId("888");
 
     // Spy on console
     const consoleSpy = vi.spyOn(console, "log");
@@ -550,6 +553,7 @@ describe("Multi-Agent Gateway Coordination", () => {
       signer,
       gatewayA
     );
+    agentA.bindRegisteredVaultId("901");
 
     const agentB = new TestAgent(
       "AgentB",
@@ -559,6 +563,7 @@ describe("Multi-Agent Gateway Coordination", () => {
       signer,
       gatewayB
     );
+    agentB.bindRegisteredVaultId("902");
 
     // Execute both agents
     const resultA = await (agentA as any).executeWithSimulation(
@@ -597,6 +602,7 @@ describe("Multi-Agent Gateway Coordination", () => {
       signer,
       gatewayA
     );
+    agentA.bindRegisteredVaultId("903");
 
     const agentB = new TestAgent(
       "AgentB",
@@ -606,6 +612,7 @@ describe("Multi-Agent Gateway Coordination", () => {
       signer,
       gatewayB
     );
+    agentB.bindRegisteredVaultId("904");
 
     // Execute both agents
     const resultA = await (agentA as any).executeWithSimulation(

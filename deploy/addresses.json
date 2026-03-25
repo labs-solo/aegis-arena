@@ -3,7 +3,7 @@
   "chainId": 196,
   "rpc": "https://rpc.xlayer.tech",
   "deployed": true,
-  "comment": "Set deployed=true and fill in ArenaAddress after running deployment-guide.sh",
+  "comment": "Arena/Bounty default owner is the deployer unless ownership is explicitly transferred later.",
   "uniswapV4": {
     "PoolManager": "0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32",
     "Permit2": "0x000000000022D473030F116dDEE9F6B43aC78BA3",

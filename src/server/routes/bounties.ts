@@ -7,6 +7,7 @@
 import { Router, Request, Response } from "express";
 import { ethers } from "ethers";
 import { x402Middleware } from "../middleware/x402";
+import { createArenaClientFromConfig, createArenaServiceConfigFromEnv } from "../services/arena";
 
 const router = Router();
 
@@ -235,102 +236,80 @@ router.post("/verify", async (req: Request, res: Response) => {
       });
     }
 
-    // Decode snapshot proof
-    let volume: bigint;
-    let avgPrice: bigint;
-
-    try {
-      if (typeof snapshotProof === "string") {
-        // Parse JSON or hex-encoded proof
-        if (snapshotProof.startsWith("[")) {
-          const [vol, price] = JSON.parse(snapshotProof);
-          volume = BigInt(vol);
-          avgPrice = BigInt(price);
-        } else {
-          // Assume ABI-encoded bytes, would need decoding
-          return res.status(400).json({
-            error: "Snapshot proof format not supported",
-            code: "INVALID_PROOF_FORMAT",
-          });
-        }
-      } else {
-        return res.status(400).json({
-          error: "Snapshot proof must be a string",
-          code: "INVALID_PROOF_TYPE",
-        });
-      }
-    } catch (parseError) {
-      return res.status(400).json({
-        error: "Failed to parse snapshot proof",
-        code: "PROOF_PARSE_ERROR",
+    const bountyAddress = process.env.BOUNTY_ADDRESS;
+    if (!bountyAddress || !ethers.isAddress(bountyAddress)) {
+      return res.status(503).json({
+        error: "BOUNTY_ADDRESS is required for on-chain verification",
+        code: "BOUNTY_NOT_CONFIGURED",
       });
     }
 
-    // Get bounty from contract (mock for MVP)
-    const bounty = {
-      bountyId,
-      creator: "0x1234567890123456789012345678901234567890",
-      rewardAmount: BigInt("1000000000"),
-      roundId: 1,
-      condition: {
-        minVolumeUsdc: BigInt("10000000000"),
-        targetPriceMin: BigInt("950000000"),
-        targetPriceMax: BigInt("1050000000"),
-        windowBlocks: 100n,
-      },
-      expiresAt: Math.floor(Date.now() / 1000) + 3600,
-      claimed: true,
-      claimedBy: "0xabcd1234567890abcd1234567890abcd12345678",
-    };
-
-    // Validate conditions
-    if (volume < bounty.condition.minVolumeUsdc) {
-      return res.status(400).json({
-        error: "Volume insufficient",
-        code: "INSUFFICIENT_VOLUME",
-        required: bounty.condition.minVolumeUsdc.toString(),
-        actual: volume.toString(),
+    const arenaClient = createArenaClientFromConfig(createArenaServiceConfigFromEnv(process.env));
+    const rpcUrl = process.env.X_LAYER_RPC_URL || process.env.RPC_URL;
+    const privateKey = process.env.ORCHESTRATOR_PRIVATE_KEY;
+    if (!rpcUrl || !privateKey) {
+      return res.status(503).json({
+        error: "RPC and ORCHESTRATOR_PRIVATE_KEY are required for verification writes",
+        code: "VERIFIER_NOT_CONFIGURED",
       });
     }
 
-    if (
-      avgPrice < bounty.condition.targetPriceMin ||
-      avgPrice > bounty.condition.targetPriceMax
-    ) {
-      return res.status(400).json({
-        error: "Price out of range",
-        code: "PRICE_OUT_OF_RANGE",
-        required: [
-          bounty.condition.targetPriceMin.toString(),
-          bounty.condition.targetPriceMax.toString(),
-        ],
-        actual: avgPrice.toString(),
-      });
-    }
-
-    // In production: call Bounty.verifyAndPay() via ethers
-    // This transfers USDC from escrow to claimant
-    // For MVP: return mock tx hash
-    const txHash =
-      "0x" +
-      Math.random()
-        .toString(16)
-        .substring(2)
-        .padEnd(64, "0");
-
-    console.log(
-      `[BountyServer] Verified and paid bounty ${bountyId} ` +
-        `to ${bounty.claimedBy} for ${bounty.rewardAmount.toString()} USDC (txHash: ${txHash})`
+    const provider = new ethers.JsonRpcProvider(rpcUrl);
+    const signer = new ethers.Wallet(privateKey, provider);
+    const bountyContract = new ethers.Contract(
+      bountyAddress,
+      [
+        "function getBounty(uint256 bountyId) view returns ((uint256 bountyId, address creator, uint256 rewardAmount, uint256 roundId, bytes32 conditionHash, (uint256 minVolumeUsdc, uint256 targetPriceMin, uint256 targetPriceMax, uint64 windowBlocks) condition, uint64 expiresAt, bool claimed, address claimedBy, uint256 claimTxBlock) bounty)",
+        "function verifyAndPay(uint256 bountyId, bytes snapshotProof) returns (bool success)",
+      ],
+      signer
     );
+
+    const bounty = await bountyContract.getBounty(BigInt(bountyId));
+
+    const encodedProof =
+      typeof snapshotProof === "string" && ethers.isHexString(snapshotProof)
+        ? snapshotProof
+        : encodeSnapshotProof(snapshotProof, bounty.roundId, bounty.claimedBy);
+
+    const decoded = ethers.AbiCoder.defaultAbiCoder().decode(
+      ["uint256", "address", "uint256"],
+      encodedProof
+    );
+    const proofRoundId = BigInt(decoded[0]);
+    const proofClaimer = ethers.getAddress(decoded[1]);
+    const snapshotIndex = BigInt(decoded[2]);
+
+    if (proofRoundId !== BigInt(bounty.roundId) || proofClaimer !== ethers.getAddress(bounty.claimedBy)) {
+      return res.status(400).json({
+        error: "Snapshot proof does not match claimed round/claimer",
+        code: "SNAPSHOT_PROOF_MISMATCH",
+      });
+    }
+
+    const snapshots = await arenaClient.getAgentSnapshots(proofRoundId, proofClaimer);
+    const snapshot = snapshots[Number(snapshotIndex)];
+    if (!snapshot || !snapshot.proofEligible) {
+      return res.status(400).json({
+        error: "Snapshot is missing or not proof-eligible on Arena",
+        code: "SNAPSHOT_NOT_PROOF_ELIGIBLE",
+      });
+    }
+
+    const tx = await bountyContract.verifyAndPay(BigInt(bountyId), encodedProof);
+    const receipt = await tx.wait();
 
     res.json({
       success: true,
       data: {
         bountyId,
-        payout: bounty.rewardAmount.toString(),
+        payout: BigInt(bounty.rewardAmount).toString(),
         claimedBy: bounty.claimedBy,
-        txHash,
-        message: "Bounty verified and payout executed",
+        txHash: receipt?.hash ?? tx.hash,
+        snapshotIndex: snapshotIndex.toString(),
+        cumulativeVolumeUsdc: snapshot.cumulativeVolumeUsdc.toString(),
+        avgPriceX96: snapshot.avgPriceX96.toString(),
+        message: "Bounty verified against Arena snapshot and payout executed",
       },
     });
   } catch (error) {
@@ -341,6 +320,46 @@ router.post("/verify", async (req: Request, res: Response) => {
     });
   }
 });
+
+function encodeSnapshotProof(
+  snapshotProof: unknown,
+  fallbackRoundId: bigint,
+  fallbackClaimer: string
+): string {
+  if (typeof snapshotProof === "string" && snapshotProof.trim().startsWith("{")) {
+    const parsed = JSON.parse(snapshotProof) as {
+      roundId?: string | number;
+      claimer?: string;
+      snapshotIndex: string | number;
+    };
+    return ethers.AbiCoder.defaultAbiCoder().encode(
+      ["uint256", "address", "uint256"],
+      [
+        BigInt(parsed.roundId ?? fallbackRoundId),
+        ethers.getAddress(parsed.claimer ?? fallbackClaimer),
+        BigInt(parsed.snapshotIndex),
+      ]
+    );
+  }
+
+  if (snapshotProof && typeof snapshotProof === "object") {
+    const parsed = snapshotProof as {
+      roundId?: string | number | bigint;
+      claimer?: string;
+      snapshotIndex: string | number | bigint;
+    };
+    return ethers.AbiCoder.defaultAbiCoder().encode(
+      ["uint256", "address", "uint256"],
+      [
+        BigInt(parsed.roundId ?? fallbackRoundId),
+        ethers.getAddress(parsed.claimer ?? fallbackClaimer),
+        BigInt(parsed.snapshotIndex),
+      ]
+    );
+  }
+
+  throw new Error("Unsupported snapshot proof format");
+}
 
 // ================================================================
 // GET /api/bounties/:bountyId/status

@@ -136,11 +136,11 @@ GatewayClient.simulate(txData)
 - Unlocked only during Batch 1 of borrow flow (FIX #4)
 - Enforces sqrt(K) solvency: `sqrt(K) >= total_debt`
 
-**Vault Creation:**
+**Vault Binding:**
 ```
-Arena.register() 
-  → for each agent: engine.createVault() 
-  → store vaultId mapping (FIX #1)
+orchestrator provisions vaults
+  → Arena.register(agents, vaultIds)
+  → store vaultId mapping
 ```
 
 **Debt Modification (3-batch pattern):**
@@ -176,8 +176,8 @@ Agent Addresses[]
       ▼
 Arena.register()
       │
+      ├─→ orchestrator supplies pre-created vaultIds[]
       ├─→ for each agent:
-      │    └─→ engine.createVault() → vaultId
       │    └─→ store mapping[agent] = vaultId
       │
       ▼
@@ -643,4 +643,3 @@ All contracts are deployed and verified on X Layer (Chain ID 196). RPC: `https:/
 **Timeline:** Deferred due to complexity (commit-reveal, oracle settlement) and 48-hour hackathon constraint.
 
 **See also:** `docs/roadmap/SEER_BETS.md` (full specification)
-

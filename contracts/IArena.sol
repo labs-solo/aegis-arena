@@ -28,14 +28,25 @@ interface IArena {
   /// @notice Emitted when agent actions are executed
   event ActionsExecuted(uint256 indexed roundId, address agent, bytes[] actions);
 
+  /// @notice Emitted when the allowed execution boundary is updated
+  event ExecutionSurfacesConfigured(
+    address indexed aegisRouter,
+    address indexed positionManager,
+    address indexed limitOrderManager,
+    address stateView
+  );
+
   // ================================================================
   // Core Game Functions
   // ================================================================
 
-  /// @notice Register agents for a new round and create their vaults
+  /// @notice Register agents for a new round and bind pre-provisioned vault IDs
   /// @param agents Array of agent addresses to participate
+  /// @param vaultIds Array of pre-created AEGIS vault IDs, 1:1 with `agents`
   /// @return roundId The ID of the created round
-  function register(address[] calldata agents) external returns (uint256 roundId);
+  function register(address[] calldata agents, uint256[] calldata vaultIds)
+    external
+    returns (uint256 roundId);
 
   /// @notice Start a round with specified duration
   /// @param roundId The round to start
@@ -47,6 +58,15 @@ interface IArena {
   /// @param agent The agent address executing actions
   /// @param actions Array of encoded action bytes
   function executeBatch(uint256 roundId, address agent, bytes[] calldata actions) external;
+
+  /// @notice Configure the explicit execution/read boundary to AEGIS surfaces
+  /// @dev This defines which downstream surfaces Arena will treat as proof-eligible
+  function configureExecutionSurfaces(
+    address aegisRouter,
+    address positionManager,
+    address limitOrderManager,
+    address stateView
+  ) external;
 
   /// @notice Settle a round: compute final scores and distribute prizes
   /// @param roundId The round to settle
@@ -91,7 +111,7 @@ interface IArena {
   /// @notice Get vault ID for an agent in a round
   /// @param roundId The round ID
   /// @param agent The agent address
-  /// @return vaultId The AEGIS vault ID created for this agent
+  /// @return vaultId The AEGIS vault ID bound for this agent
   function getAgentVault(uint256 roundId, address agent) external view returns (uint256 vaultId);
 
   /// @notice Check if a round is active
@@ -102,4 +122,38 @@ interface IArena {
   /// @notice Get total number of rounds created
   /// @return count Total rounds
   function roundCount() external view returns (uint256 count);
+
+  /// @notice Get the stored execution state for an agent in a round
+  function getAgentExecutionState(uint256 roundId, address agent)
+    external
+    view
+    returns (
+      uint256 vaultId,
+      uint256 executionCount,
+      uint256 actionCount,
+      uint256 cumulativeVolumeUsdc,
+      uint256 latestAvgPriceX96,
+      uint256 lastExecutionBlock,
+      address lastSurface,
+      bytes32 lastBatchHash,
+      bool lastProofEligible
+    );
+
+  /// @notice Get the number of stored execution snapshots for an agent in a round
+  function getSnapshotCount(uint256 roundId, address agent) external view returns (uint256 count);
+
+  /// @notice Read an execution snapshot stored by Arena
+  function getSnapshotAt(uint256 roundId, address agent, uint256 snapshotIndex)
+    external
+    view
+    returns (
+      uint256 blockNumber,
+      uint256 timestamp,
+      uint256 cumulativeVolumeUsdc,
+      uint256 avgPriceX96,
+      uint256 actionCount,
+      address surface,
+      bytes32 batchHash,
+      bool proofEligible
+    );
 }

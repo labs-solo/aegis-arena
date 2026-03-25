@@ -1,10 +1,11 @@
 /// AEGIS Router Calldata Encoding
 
-import { AbiCoder, toBeHex, zeroPadValue } from "ethers";
+import { AbiCoder } from "ethers";
 import { Action, ActionParam } from "./types";
 import { OPCODES, isValidOpcode } from "./opcodes";
 
 const abiCoder = AbiCoder.defaultAbiCoder();
+export const ARENA_EXECUTION_METADATA_TAG = 0xfe;
 
 /// @notice Encode a single action with opcode and parameters
 /// @param opcode The operation code
@@ -37,6 +38,24 @@ export function encodeAction(opcode: number, params: ActionParam[]): string {
 /// @returns Array of hex-encoded action bytes
 export function encodeBatch(actions: Action[]): string[] {
   return actions.map((action) => encodeAction(action.opcode, action.params));
+}
+
+export interface ArenaExecutionMetadataParams {
+  surface: string;
+  volumeUsdc: bigint;
+  avgPriceX96: bigint;
+  version?: number;
+}
+
+/// @notice Encode the Arena-side execution metadata envelope.
+/// @dev This is not forwarded to AEGIS. Arena consumes it as the first batch item.
+export function encodeArenaExecutionMetadata(params: ArenaExecutionMetadataParams): string {
+  const encoded = abiCoder.encode(
+    ["uint8", "address", "uint256", "uint256"],
+    [params.version ?? 1, params.surface, params.volumeUsdc, params.avgPriceX96]
+  );
+
+  return `0x${ARENA_EXECUTION_METADATA_TAG.toString(16)}${encoded.slice(2)}`;
 }
 
 // ================================================================

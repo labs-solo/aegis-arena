@@ -1,5 +1,7 @@
 # Technical Reference — AEGIS Arena
 
+> Fail-closed note: this file mixes deployed addresses with planned behavior. In the current repo, `Arena.register()` still assigns synthetic vault IDs, `executeBatch()` is event-only, settlement/snapshots are stubbed, and `Bounty.verifyAndPay()` still trusts owner-provided proof bytes. Implementation sequencing for the real-gameplay branch is tracked in [docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md](/Users/page/Page/repos/aegis-arena/docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md).
+
 This document is for judges and developers who want to verify the on-chain reality of AEGIS Arena. **Everything here is live on X Layer mainnet (Chain 196) and verifiable in minutes.**
 
 ---

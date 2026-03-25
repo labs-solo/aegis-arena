@@ -98,7 +98,9 @@ TREND_FOLLOWER="0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1"
 PREDATOR="0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D"
 
 REGISTER_DEPLOY=$(cast send "$ARENA_ADDRESS" \
-  "register(address[])" "[$PASSIVE_LP, $TREND_FOLLOWER, $PREDATOR]" \
+  "register(address[],uint256[])" \
+  "[$PASSIVE_LP, $TREND_FOLLOWER, $PREDATOR]" \
+  "[501, 777, 999]" \
   --rpc-url "$X_LAYER_RPC_URL" \
   --private-key "$ORCHESTRATOR_PRIVATE_KEY" \
   --json)

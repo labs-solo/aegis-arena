@@ -2,91 +2,121 @@
 pragma solidity ^0.8.20;
 
 import "./IArena.sol";
-import "./AegisDeployConfig.sol";
 
 /// @title Arena
 /// @notice AEGIS Arena game contract — orchestrates AI agent competition
-/// @dev Implements all 8 known issue fixes from plan v2
+/// @dev Current gameplay slice binds pre-provisioned vault IDs from the orchestrator.
+///      `executeBatch()` is now a real write path into Arena state. Actual downstream
+///      router execution remains an explicit configured boundary rather than implicit.
 contract Arena is IArena {
-  // ================================================================
-  // Type Definitions
-  // ================================================================
+  uint8 internal constant EXECUTION_METADATA_TAG = 0xFE;
+  uint8 internal constant EXECUTION_METADATA_VERSION = 1;
+
+  struct ExecutionSnapshot {
+    uint256 blockNumber;
+    uint256 timestamp;
+    uint256 cumulativeVolumeUsdc;
+    uint256 avgPriceX96;
+    uint256 actionCount;
+    address surface;
+    bytes32 batchHash;
+    bool proofEligible;
+  }
+
+  struct AgentExecutionState {
+    uint256 executionCount;
+    uint256 actionCount;
+    uint256 cumulativeVolumeUsdc;
+    uint256 latestAvgPriceX96;
+    uint256 lastExecutionBlock;
+    address lastSurface;
+    bytes32 lastBatchHash;
+    bool lastProofEligible;
+    ExecutionSnapshot[] snapshots;
+  }
 
   /// @notice Round data structure with explicit duration field (FIX #5)
   struct RoundData {
     uint256 roundId;
     uint256 startTime;
     uint256 endTime;
-    uint256 roundDuration; // FIX #5: Explicit duration, not derived from endTime
+    uint256 roundDuration;
     uint256 prizePool;
     address[] agents;
-    mapping(address => uint256) agentVaultIds; // FIX #1: Vault mapping
-    mapping(address => uint256) finalScores; // FIX #4: USDC-denominated scores
+    mapping(address => uint256) agentVaultIds;
+    mapping(address => uint256) finalScores;
+    mapping(address => AgentExecutionState) executionStates;
+    address[] settledRanking;
+    uint256[] settledPrizes;
     bool settled;
   }
-
-  // ================================================================
-  // State Variables
-  // ================================================================
 
   address public owner;
   uint256 public nextRoundId = 1;
 
+  address public aegisRouter;
+  address public positionManager;
+  address public limitOrderManager;
+  address public stateView;
+
   mapping(uint256 => RoundData) public rounds;
   mapping(uint256 => address[]) public roundAgents;
-
-  // ================================================================
-  // Constructor
-  // ================================================================
 
   constructor() {
     owner = msg.sender;
   }
-
-  // ================================================================
-  // Access Control
-  // ================================================================
 
   modifier onlyOwner() {
     require(msg.sender == owner, "Arena: only owner");
     _;
   }
 
-  // ================================================================
-  // Core Game Functions (from IArena)
-  // ================================================================
+  error ArrayLengthMismatch();
+  error DuplicateAgent(address agent);
+  error DuplicateVaultId(uint256 vaultId);
+  error InvalidVaultId();
 
-  /// @notice Register agents and create their vaults (FIX #1: calls engine.createVault)
-  /// @param agents Array of agent addresses
-  /// @return roundId The newly created round ID
-  function register(address[] calldata agents) external onlyOwner returns (uint256 roundId) {
+  function register(address[] calldata agents, uint256[] calldata vaultIds)
+    external
+    onlyOwner
+    returns (uint256 roundId)
+  {
     require(agents.length >= 2, "Arena: need at least 2 agents");
     require(agents.length <= 10, "Arena: max 10 agents per round");
+    if (agents.length != vaultIds.length) {
+      revert ArrayLengthMismatch();
+    }
 
     roundId = nextRoundId;
     nextRoundId++;
 
     RoundData storage round = rounds[roundId];
     round.roundId = roundId;
-    round.startTime = 0; // Not started yet
+    round.startTime = 0;
     round.endTime = 0;
     round.roundDuration = 0;
     round.prizePool = 0;
     round.settled = false;
 
-    // Store agents and create vaults (FIX #1: MANDATORY vault creation)
     for (uint256 i = 0; i < agents.length; i++) {
       address agent = agents[i];
       require(agent != address(0), "Arena: invalid agent");
+      uint256 vaultId = vaultIds[i];
+      if (vaultId == 0) {
+        revert InvalidVaultId();
+      }
+      if (round.agentVaultIds[agent] != 0) {
+        revert DuplicateAgent(agent);
+      }
 
-      // FIX #1: Create vault on AEGIS Engine for each agent
-      // In production, would call: uint256 vaultId = engine.createVault()
-      // For this stub, we assign sequential vault IDs
-      uint256 vaultId = roundId * 1000 + i + 1; // e.g., 1001, 1002, 1003 for round 1
+      for (uint256 j = 0; j < i; j++) {
+        if (vaultIds[j] == vaultId) {
+          revert DuplicateVaultId(vaultId);
+        }
+      }
 
       round.agents.push(agent);
       round.agentVaultIds[agent] = vaultId;
-
       roundAgents[roundId].push(agent);
 
       emit AgentRegistered(roundId, agent, vaultId);
@@ -95,9 +125,6 @@ contract Arena is IArena {
     emit RoundRegistered(roundId, agents);
   }
 
-  /// @notice Start a round with explicit duration (FIX #5: stores roundDuration)
-  /// @param roundId The round to start
-  /// @param durationSeconds Duration in seconds
   function startRound(uint256 roundId, uint256 durationSeconds)
     external
     onlyOwner
@@ -107,18 +134,32 @@ contract Arena is IArena {
     require(round.startTime == 0, "Arena: round already started");
     require(durationSeconds > 0, "Arena: invalid duration");
 
-    // FIX #5: Store duration explicitly, compute endTime from it
     round.startTime = block.timestamp;
-    round.roundDuration = durationSeconds; // CRITICAL: Store duration explicitly
+    round.roundDuration = durationSeconds;
     round.endTime = block.timestamp + durationSeconds;
 
     emit RoundStarted(roundId, durationSeconds);
   }
 
-  /// @notice Execute batch of agent actions
-  /// @param roundId The active round
-  /// @param agent The agent address
-  /// @param actions Array of encoded action bytes
+  function configureExecutionSurfaces(
+    address _aegisRouter,
+    address _positionManager,
+    address _limitOrderManager,
+    address _stateView
+  ) external onlyOwner {
+    aegisRouter = _aegisRouter;
+    positionManager = _positionManager;
+    limitOrderManager = _limitOrderManager;
+    stateView = _stateView;
+
+    emit ExecutionSurfacesConfigured(
+      _aegisRouter,
+      _positionManager,
+      _limitOrderManager,
+      _stateView
+    );
+  }
+
   function executeBatch(uint256 roundId, address agent, bytes[] calldata actions)
     external
   {
@@ -126,20 +167,47 @@ contract Arena is IArena {
     require(round.roundId != 0, "Arena: round not found");
     require(round.startTime > 0, "Arena: round not started");
     require(block.timestamp < round.endTime, "Arena: round ended");
+    require(msg.sender == owner || msg.sender == agent, "Arena: unauthorized executor");
 
-    // Verify agent is registered
     uint256 vaultId = round.agentVaultIds[agent];
     require(vaultId != 0, "Arena: agent not registered");
+    require(actions.length > 0, "Arena: empty action batch");
 
-    // In production, would encode and submit to AEGIS Router
-    // For now, just record the action
+    AgentExecutionState storage executionState = round.executionStates[agent];
+    executionState.executionCount += 1;
+    executionState.actionCount += actions.length;
+    executionState.lastExecutionBlock = block.number;
+
+    bytes32 batchHash = keccak256(abi.encode(roundId, agent, msg.sender, actions));
+    executionState.lastBatchHash = batchHash;
+
+    (address surface, uint256 reportedVolumeUsdc, uint256 avgPriceX96, bool proofEligible) =
+      _extractExecutionMetadata(actions);
+
+    executionState.lastSurface = surface;
+    executionState.lastProofEligible = proofEligible;
+
+    if (proofEligible) {
+      executionState.cumulativeVolumeUsdc += reportedVolumeUsdc;
+      executionState.latestAvgPriceX96 = avgPriceX96;
+    }
+
+    executionState.snapshots.push(
+      ExecutionSnapshot({
+        blockNumber: block.number,
+        timestamp: block.timestamp,
+        cumulativeVolumeUsdc: executionState.cumulativeVolumeUsdc,
+        avgPriceX96: executionState.latestAvgPriceX96,
+        actionCount: executionState.actionCount,
+        surface: surface,
+        batchHash: batchHash,
+        proofEligible: proofEligible
+      })
+    );
+
     emit ActionsExecuted(roundId, agent, actions);
   }
 
-  /// @notice Settle a round: compute scores and distribute prizes
-  /// @param roundId The round to settle
-  /// @return winners Ranked winners
-  /// @return prizes Prize amounts
   function settle(uint256 roundId)
     external
     onlyOwner
@@ -154,60 +222,25 @@ contract Arena is IArena {
     address[] storage agents = round.agents;
     require(agents.length > 0, "Arena: no agents");
 
-    // FIX #4: Compute final scores with WOKB→USDC conversion
-    // This is a stub; full implementation would:
-    // 1. Query vault balances from AEGIS Engine
-    // 2. Convert sL shares to USDC via pool reserves
-    // 3. Convert WOKB to USDC via sqrtPriceX96 formula: price = (sqrtPrice / 2^96)^2
-    // 4. Sum: totalUSDC = sL_converted + WOKB_converted + idle_USDC
-    //
-    // For this stub, assign mock scores
     for (uint256 i = 0; i < agents.length; i++) {
-      // Mock score: decending from 1000 USDC
-      round.finalScores[agents[i]] = 1000 - (i * 100);
+      AgentExecutionState storage state = round.executionStates[agents[i]];
+      round.finalScores[agents[i]] = state.cumulativeVolumeUsdc;
     }
 
-    // Sort agents by score (descending)
     address[] memory sorted = _sortAgentsByScore(roundId, agents);
-
-    // FIX #7: Compute prizes with dust handling
-    // Example: 1000 USDC, 3 agents → [500 + 1, 250, 249]
-    uint256 totalPrizes = 1000e6; // Assume 1000 USDC (1e6 decimals)
-    uint256[] memory allPrizes = new uint256[](agents.length);
-
-    if (agents.length == 1) {
-      allPrizes[0] = totalPrizes;
-    } else if (agents.length == 2) {
-      uint256 half = totalPrizes / 2;
-      allPrizes[0] = half + (totalPrizes % 2); // Winner gets dust
-      allPrizes[1] = half;
-    } else {
-      // 3+ agents: 50%, 25%, 25% (or equal split if more)
-      uint256 firstPrize = totalPrizes / 2;
-      uint256 remainder = totalPrizes % 2;
-
-      allPrizes[0] = firstPrize + remainder; // Winner gets dust (FIX #7)
-
-      for (uint256 i = 1; i < agents.length; i++) {
-        allPrizes[i] = totalPrizes / (agents.length * 2);
-      }
-    }
-
-    // Return winners and prizes in ranked order
-    winners = sorted;
-    prizes = new uint256[](sorted.length);
+    uint256[] memory computedPrizes = _computePrizes(agents.length);
 
     for (uint256 i = 0; i < sorted.length; i++) {
-      prizes[i] = allPrizes[i];
+      round.settledRanking.push(sorted[i]);
+      round.settledPrizes.push(computedPrizes[i]);
     }
 
+    winners = sorted;
+    prizes = computedPrizes;
     round.settled = true;
-    emit RoundSettled(roundId, winners, prizes, _getFinalScoresArray(roundId, sorted));
-  }
 
-  // ================================================================
-  // Query Functions
-  // ================================================================
+    emit RoundSettled(roundId, winners, prizes, _getFinalScoresArray(roundId, winners));
+  }
 
   function getRoundState(uint256 roundId)
     external
@@ -241,17 +274,13 @@ contract Arena is IArena {
     require(round.roundId != 0, "Arena: round not found");
     require(round.settled, "Arena: round not settled");
 
-    address[] memory sorted = _sortAgentsByScore(roundId, round.agents);
+    agentsRanked = round.settledRanking;
+    prizes = round.settledPrizes;
+    scores = new uint256[](agentsRanked.length);
 
-    scores = new uint256[](sorted.length);
-    for (uint256 i = 0; i < sorted.length; i++) {
-      scores[i] = round.finalScores[sorted[i]];
+    for (uint256 i = 0; i < agentsRanked.length; i++) {
+      scores[i] = round.finalScores[agentsRanked[i]];
     }
-
-    // Prizes would be queried from settlement, returning same format
-    prizes = new uint256[](sorted.length);
-
-    return (sorted, scores, prizes);
   }
 
   function getAgentVault(uint256 roundId, address agent)
@@ -264,50 +293,114 @@ contract Arena is IArena {
 
   function isRoundActive(uint256 roundId) external view returns (bool active) {
     RoundData storage round = rounds[roundId];
-    return round.startTime > 0 && block.timestamp < round.endTime;
+    return round.startTime > 0 && block.timestamp < round.endTime && !round.settled;
   }
 
   function roundCount() external view returns (uint256 count) {
     return nextRoundId - 1;
   }
 
-  /// @notice Returns historical score snapshots for an agent in a round
-  /// @dev Used by Bounty.sol to verify claim conditions
-  /// @param roundId The Arena round ID
-  /// @param agent The agent address to snapshot
-  /// @return snapshots Array of historical scores
-  function getSnapshots(uint256 roundId, address agent) external view returns (int256[] memory snapshots) {
-    // MVP stub: return mock snapshots for hackathon
-    // Post-hackathon: would aggregate from transaction history or AEGIS Engine
+  function getAgentExecutionState(uint256 roundId, address agent)
+    external
+    view
+    returns (
+      uint256 vaultId,
+      uint256 executionCount,
+      uint256 actionCount,
+      uint256 cumulativeVolumeUsdc,
+      uint256 latestAvgPriceX96,
+      uint256 lastExecutionBlock,
+      address lastSurface,
+      bytes32 lastBatchHash,
+      bool lastProofEligible
+    )
+  {
     RoundData storage round = rounds[roundId];
     require(round.roundId != 0, "Arena: round not found");
 
-    // Return mock snapshots array with one entry > 0
-    snapshots = new int256[](1);
-    snapshots[0] = int256(5000 * 10 ** 6); // 5000 USDC as mock score
+    AgentExecutionState storage state = round.executionStates[agent];
+    return (
+      round.agentVaultIds[agent],
+      state.executionCount,
+      state.actionCount,
+      state.cumulativeVolumeUsdc,
+      state.latestAvgPriceX96,
+      state.lastExecutionBlock,
+      state.lastSurface,
+      state.lastBatchHash,
+      state.lastProofEligible
+    );
   }
 
-  /// @notice Returns snapshot timestamps for an agent in a round
-  /// @dev Provides temporal context for bounty verification
-  /// @param roundId The Arena round ID
-  /// @return timestamps Array of block numbers where snapshots were recorded
+  function getSnapshotCount(uint256 roundId, address agent) external view returns (uint256 count) {
+    RoundData storage round = rounds[roundId];
+    require(round.roundId != 0, "Arena: round not found");
+    count = round.executionStates[agent].snapshots.length;
+  }
+
+  function getSnapshotAt(uint256 roundId, address agent, uint256 snapshotIndex)
+    external
+    view
+    returns (
+      uint256 blockNumber,
+      uint256 timestamp,
+      uint256 cumulativeVolumeUsdc,
+      uint256 avgPriceX96,
+      uint256 actionCount,
+      address surface,
+      bytes32 batchHash,
+      bool proofEligible
+    )
+  {
+    RoundData storage round = rounds[roundId];
+    require(round.roundId != 0, "Arena: round not found");
+
+    ExecutionSnapshot storage snapshot = round.executionStates[agent].snapshots[snapshotIndex];
+    return (
+      snapshot.blockNumber,
+      snapshot.timestamp,
+      snapshot.cumulativeVolumeUsdc,
+      snapshot.avgPriceX96,
+      snapshot.actionCount,
+      snapshot.surface,
+      snapshot.batchHash,
+      snapshot.proofEligible
+    );
+  }
+
+  /// @notice Returns historical score snapshots for an agent in a round
+  /// @dev Used by legacy callers and bounty verification helpers
+  function getSnapshots(uint256 roundId, address agent) external view returns (int256[] memory snapshots) {
+    RoundData storage round = rounds[roundId];
+    require(round.roundId != 0, "Arena: round not found");
+
+    uint256 count = round.executionStates[agent].snapshots.length;
+    snapshots = new int256[](count);
+    for (uint256 i = 0; i < count; i++) {
+      snapshots[i] = int256(round.executionStates[agent].snapshots[i].cumulativeVolumeUsdc);
+    }
+  }
+
   function getSnapshotTimestamps(uint256 roundId) external view returns (uint256[] memory timestamps) {
     RoundData storage round = rounds[roundId];
     require(round.roundId != 0, "Arena: round not found");
 
-    // Return mock timestamps
-    timestamps = new uint256[](1);
-    timestamps[0] = block.number;
+    uint256 total;
+    for (uint256 i = 0; i < round.agents.length; i++) {
+      total += round.executionStates[round.agents[i]].snapshots.length;
+    }
+
+    timestamps = new uint256[](total);
+    uint256 cursor;
+    for (uint256 i = 0; i < round.agents.length; i++) {
+      ExecutionSnapshot[] storage agentSnapshots = round.executionStates[round.agents[i]].snapshots;
+      for (uint256 j = 0; j < agentSnapshots.length; j++) {
+        timestamps[cursor] = agentSnapshots[j].blockNumber;
+        cursor++;
+      }
+    }
   }
 
-  // ================================================================
-  // Internal Helper Functions
-  // ================================================================
-
-  /// @notice Sort agents by final score (descending)
-  /// @param roundId The round ID
-  /// @param agents Array of agent addresses
-  /// @return sorted Agents in descending score order
   function _sortAgentsByScore(uint256 roundId, address[] storage agents)
     internal
     view
@@ -320,7 +413,6 @@ contract Arena is IArena {
       sorted[i] = agents[i];
     }
 
-    // Bubble sort (simple, O(n²) but fine for small n)
     for (uint256 i = 0; i < sorted.length; i++) {
       for (uint256 j = i + 1; j < sorted.length; j++) {
         if (round.finalScores[sorted[j]] > round.finalScores[sorted[i]]) {
@@ -328,14 +420,8 @@ contract Arena is IArena {
         }
       }
     }
-
-    return sorted;
   }
 
-  /// @notice Get scores array for sorted agents
-  /// @param roundId The round ID
-  /// @param agents Array of agents in desired order
-  /// @return scores Score for each agent
   function _getFinalScoresArray(uint256 roundId, address[] memory agents)
     internal
     view
@@ -343,117 +429,80 @@ contract Arena is IArena {
   {
     RoundData storage round = rounds[roundId];
     scores = new uint256[](agents.length);
-
     for (uint256 i = 0; i < agents.length; i++) {
       scores[i] = round.finalScores[agents[i]];
     }
-
-    return scores;
   }
 
-  // ================================================================
-  // Earnings Tracking Functions (Additive Feature)
-  // ================================================================
-  // These functions enable agents to report their earnings breakdown
-  // (trading fees vs borrow interest) for improved auditability.
-  // They do NOT change the scoring formula — the final score remains
-  // the agent's final USDC value (idle + LP value).
-  //
-  // Judge audit: agents can call reportEarnings() to emit tracking data.
-  // This allows external verification of the fee/interest split for each agent.
-  // ================================================================
+  function _computePrizes(uint256 numAgents) internal pure returns (uint256[] memory prizes) {
+    prizes = new uint256[](numAgents);
+    uint256 totalPrizes = 1000e6;
 
-  /// @notice Emitted when an agent reports earnings breakdown
-  /// @dev For audit trail; does not affect scoring (score is final USDC value only)
-  event EarningsReported(
-    uint256 indexed roundId,
-    address indexed agent,
-    uint256 tradingFees,      // Accumulated swap fees (wei)
-    uint256 borrowInterest,   // Accrued borrow interest (wei)
-    uint256 totalEarnings     // Sum of fees + interest
-  );
+    if (numAgents == 1) {
+      prizes[0] = totalPrizes;
+      return prizes;
+    }
 
-  /// @notice Allow agent to report earnings breakdown for auditing
-  /// @param roundId The round ID
-  /// @param tradingFees Amount of fees earned from swaps
-  /// @param borrowInterest Amount of interest earned from borrow volume
-  /// @dev Emits EarningsReported for judge audit; does not change score calculation
-  /// @dev Score remains: final USDC value (idle + LP shares converted to USDC)
-  function reportEarnings(
-    uint256 roundId,
-    uint256 tradingFees,
-    uint256 borrowInterest
-  ) external {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
-    
-    // Only agent can report their own earnings
-    uint256 vaultId = round.agentVaultIds[msg.sender];
-    require(vaultId != 0, "Arena: agent not registered");
+    if (numAgents == 2) {
+      uint256 half = totalPrizes / 2;
+      prizes[0] = half + (totalPrizes % 2);
+      prizes[1] = half;
+      return prizes;
+    }
 
-    uint256 totalEarnings = tradingFees + borrowInterest;
-    
-    emit EarningsReported(roundId, msg.sender, tradingFees, borrowInterest, totalEarnings);
+    uint256 firstPrize = totalPrizes / 2;
+    uint256 allocated = firstPrize;
+    prizes[0] = firstPrize;
+
+    uint256 remainder = totalPrizes - firstPrize;
+    uint256 sharedPrize = remainder / (numAgents - 1);
+    for (uint256 i = 1; i < numAgents; i++) {
+      prizes[i] = sharedPrize;
+      allocated += sharedPrize;
+    }
+
+    if (allocated < totalPrizes) {
+      prizes[0] += (totalPrizes - allocated);
+    }
   }
 
-  /// @notice Get breakdown of final score components (if available)
-  /// @param roundId The round ID
-  /// @param agent The agent address
-  /// @return idle Agent's idle USDC balance
-  /// @return liquidity Agent's LP share value (in USDC equivalent)
-  /// @return debt Agent's outstanding debt (if any)
-  /// @dev For audit purposes; helps judges understand score composition
-  /// @dev In production, would query actual vault state from AEGIS Engine
-  function getVaultBreakdown(uint256 roundId, address agent)
-    external
+  function _extractExecutionMetadata(bytes[] calldata actions)
+    internal
     view
-    returns (
-      uint256 idle,
-      uint256 liquidity,
-      uint256 debt
-    )
+    returns (address surface, uint256 reportedVolumeUsdc, uint256 avgPriceX96, bool proofEligible)
   {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
+    bytes calldata firstAction = actions[0];
+    if (firstAction.length < 1 || uint8(firstAction[0]) != EXECUTION_METADATA_TAG) {
+      return (address(0), 0, 0, false);
+    }
 
-    uint256 vaultId = round.agentVaultIds[agent];
-    require(vaultId != 0, "Arena: agent not registered");
+    (
+      uint8 version,
+      address declaredSurface,
+      uint256 volumeUsdc,
+      uint256 declaredAvgPriceX96
+    ) = abi.decode(firstAction[1:], (uint8, address, uint256, uint256));
 
-    // Stub: return mock breakdown
-    // In production: would call AEGIS StateView.getVault(vaultId)
-    //
-    // For PassiveLP strategy:
-    // - idle ≈ 50 USDC (half of capital, minus bounty spend)
-    // - liquidity ≈ 50 USDC + accumulated fees (full-range LP position)
-    // - debt = 0 (PassiveLP never borrows)
-    
-    idle = round.finalScores[agent] / 2;     // Mock: half of score
-    liquidity = round.finalScores[agent] / 2; // Mock: other half
-    debt = 0;                                  // PassiveLP has no debt
+    if (version != EXECUTION_METADATA_VERSION) {
+      return (address(0), 0, 0, false);
+    }
+
+    if (!_isApprovedSurface(declaredSurface)) {
+      return (declaredSurface, 0, 0, false);
+    }
+
+    return (declaredSurface, volumeUsdc, declaredAvgPriceX96, true);
   }
 
-  /// @notice Get final value of agent's vault (score + detail)
-  /// @param roundId The round ID  
-  /// @param agent The agent address
-  /// @return finalValue Final USDC-denominated score
-  /// @return breakdown Breakdown of how score is composed
-  /// @dev Used for judge verification and agent performance analysis
-  function getVaultFinalValue(uint256 roundId, address agent)
-    external
-    view
-    returns (uint256 finalValue, string memory breakdown)
-  {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
-    require(round.settled, "Arena: round not settled");
+  function _isApprovedSurface(address surface) internal view returns (bool) {
+    if (surface == address(0)) {
+      return false;
+    }
 
-    uint256 vaultId = round.agentVaultIds[agent];
-    require(vaultId != 0, "Arena: agent not registered");
-
-    finalValue = round.finalScores[agent];
-
-    // In production: construct breakdown from vault state
-    // For MVP: return mock string
-    breakdown = "idle + liquidity_shares (at current share price)";
+    return
+      surface == aegisRouter ||
+      surface == positionManager ||
+      surface == limitOrderManager ||
+      surface == stateView;
   }
 }

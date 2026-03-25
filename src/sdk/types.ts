@@ -51,11 +51,84 @@ export interface FinalScores {
   prizes: bigint[];
 }
 
+export interface AgentExecutionState {
+  vaultId: bigint;
+  executionCount: bigint;
+  actionCount: bigint;
+  cumulativeVolumeUsdc: bigint;
+  latestAvgPriceX96: bigint;
+  lastExecutionBlock: bigint;
+  lastSurface: string;
+  lastBatchHash: string;
+  lastProofEligible: boolean;
+}
+
+export interface ArenaExecutionSnapshot {
+  blockNumber: bigint;
+  timestamp: bigint;
+  cumulativeVolumeUsdc: bigint;
+  avgPriceX96: bigint;
+  actionCount: bigint;
+  surface: string;
+  batchHash: string;
+  proofEligible: boolean;
+}
+
+export interface ActionExecutionRecord {
+  roundId: bigint;
+  agent: string;
+  transactionHash: string;
+  blockNumber: bigint;
+  actionCount: number;
+  actions: string[];
+}
+
 export interface AgentConfig {
   name: string;
   address: string;
   strategy: "PassiveLP" | "TrendFollower" | "Predator";
   initialAllocation: bigint;
+}
+
+export interface ArenaAgentBinding {
+  agent: string;
+  vaultId: bigint;
+}
+
+export interface ArenaRegistrationParams {
+  agents: string[];
+  vaultIds: bigint[];
+}
+
+export interface AgentVaultBindingReader {
+  getAgentVault(roundId: bigint, agent: string): Promise<bigint>;
+}
+
+export type VaultValidationSource =
+  | "vaultRegistry.ownerOf"
+  | "config.knownVaultOwners"
+  | "config.knownVaultIds";
+
+export interface VaultValidationEvidence {
+  source: VaultValidationSource;
+  success: boolean;
+  details: string;
+  owner?: string;
+}
+
+export interface VaultValidationResult {
+  vaultId: bigint;
+  valid: boolean;
+  owner?: string;
+  evidence: VaultValidationEvidence[];
+  limitations: string[];
+}
+
+export interface ArenaRegistrationResult {
+  roundId: bigint;
+  txHash: string;
+  bindings: ArenaAgentBinding[];
+  validationResults: VaultValidationResult[];
 }
 
 // ================================================================

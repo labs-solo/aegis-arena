@@ -9,6 +9,12 @@ export * from "./opcodes";
 // Router encoding
 export * from "./router";
 
+// Arena registration and bindings
+export * from "./arena";
+
+// Vault validation
+export * from "./vault-validator";
+
 // Borrow flow (3-batch pattern)
 export * from "./borrow-flow";
 

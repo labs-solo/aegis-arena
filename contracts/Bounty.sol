@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "openzeppelin/security/ReentrancyGuard.sol";
 import "openzeppelin/token/ERC20/IERC20.sol";
+import "./IArena.sol";
 
 /// @title IBounty Interface (minimal)
 interface IEssentialToken is IERC20 {
@@ -116,6 +117,7 @@ contract Bounty is ReentrancyGuard {
   error InsufficientAllowance();
   error NotYetExpired(uint256 bountyId);
   error TransferFailed();
+  error InvalidSnapshotProof();
 
   // ================================================================
   // Constructor
@@ -382,10 +384,29 @@ contract Bounty is ReentrancyGuard {
     bytes calldata proof,
     Bounty storage bounty
   ) internal view returns (uint256 volume, uint256 avgPrice) {
-    // Decode proof as (uint256 volume, uint256 avgPrice)
-    (volume, avgPrice) = abi.decode(proof, (uint256, uint256));
+    (uint256 proofRoundId, address claimer, uint256 snapshotIndex) =
+      abi.decode(proof, (uint256, address, uint256));
 
-    // MVP: basic validation (server validates in production)
-    // Post-hackathon: would call IArena(arena).getSnapshots()
+    if (proofRoundId != bounty.roundId || claimer != bounty.claimedBy) {
+      revert InvalidSnapshotProof();
+    }
+
+    (
+      ,
+      ,
+      uint256 cumulativeVolumeUsdc,
+      uint256 avgPriceX96,
+      ,
+      ,
+      ,
+      bool proofEligible
+    ) = IArena(arena).getSnapshotAt(bounty.roundId, bounty.claimedBy, snapshotIndex);
+
+    if (!proofEligible) {
+      revert InvalidSnapshotProof();
+    }
+
+    volume = cumulativeVolumeUsdc;
+    avgPrice = avgPriceX96;
   }
 }

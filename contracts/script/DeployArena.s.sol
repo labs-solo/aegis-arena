@@ -13,6 +13,7 @@ contract DeployArenaScript is Script {
 
     Arena arena = new Arena();
     console.log("Arena deployed at:", address(arena));
+    console.log("Arena owner (deployer):", vm.addr(deployerKey));
 
     vm.stopBroadcast();
   }

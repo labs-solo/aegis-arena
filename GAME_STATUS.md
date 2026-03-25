@@ -1,5 +1,7 @@
 # AEGIS Arena — Live Game Status
 
+> Fail-closed note: this status file includes live deployment references, but the repo code on `real-gameplay` still contains stubbed Arena settlement/snapshot behavior and owner-decoded bounty proof verification. Treat gameplay implementation status as incomplete until the staged work in [docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md](/Users/page/Page/repos/aegis-arena/docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md) is finished.
+
 > **Last updated:** 2026-03-24 22:02 EDT  
 > **Chain:** X Layer Mainnet (Chain ID: 196)
 

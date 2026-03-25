@@ -1,8 +1,12 @@
 /// Base class for all AEGIS Arena agents
 
-import { Signer } from "ethers";
-import { GameState, Action, SimulationResult } from "../sdk/types";
+import { Contract, Interface, Signer } from "ethers";
+import { GameState, Action, SimulationResult, AgentVaultBindingReader } from "../sdk/types";
 import { GatewayClient } from "../sdk/gateway";
+
+const arenaInterface = new Interface([
+  "function executeBatch(uint256 roundId, address agent, bytes[] actions)",
+]);
 
 /// Abstract base class for agent strategies
 export abstract class BaseAgent {
@@ -40,13 +44,47 @@ export abstract class BaseAgent {
     return this.agentAddress;
   }
 
-  /// @notice Set vault ID (called after vault creation)
-  setVaultId(vaultId: string): void {
+  /// @notice Bind the registered vault ID assigned by the orchestrator
+  bindRegisteredVaultId(vaultId: string): void {
+    if (!vaultId || vaultId === "0" || vaultId === "0x0") {
+      throw new Error(`[${this.name}] invalid registered vault ID`);
+    }
     this.vaultId = vaultId;
+  }
+
+  /// @notice Set vault ID (backwards-compatible alias)
+  setVaultId(vaultId: string): void {
+    this.bindRegisteredVaultId(vaultId);
   }
 
   /// @notice Get vault ID
   getVaultId(): string {
+    return this.vaultId;
+  }
+
+  /// @notice Read the registered vault ID from Arena and bind it locally
+  async bindRegisteredVaultIdFromArena(
+    roundId: bigint,
+    arenaClient: AgentVaultBindingReader
+  ): Promise<string> {
+    const vaultId = await arenaClient.getAgentVault(roundId, this.agentAddress);
+    if (vaultId <= 0n) {
+      throw new Error(
+        `[${this.name}] no registered vault ID found on Arena for round ${roundId.toString()}`
+      );
+    }
+
+    const normalizedVaultId = vaultId.toString();
+    this.bindRegisteredVaultId(normalizedVaultId);
+    return normalizedVaultId;
+  }
+
+  protected requireRegisteredVaultId(): string {
+    if (!this.vaultId) {
+      throw new Error(
+        `[${this.name}] registered vault ID not bound; orchestrator must provision and bind Arena vault IDs first`
+      );
+    }
     return this.vaultId;
   }
 
@@ -151,11 +189,22 @@ export abstract class BaseAgent {
         `[${this.name}] Direct execution: ${encodedActions.length} action(s) for round ${roundId}`
       );
 
-      // TODO: Implement direct Arena.executeBatch() call
-      // For MVP: return mock hash
-      // In production: construct TX, sign, and submit to Arena contract
+      this.requireRegisteredVaultId();
+
+      const arenaContract = new Contract(
+        this.arenaAddress,
+        arenaInterface.fragments,
+        this.signer
+      );
+      const tx = await arenaContract.executeBatch(
+        roundId,
+        this.agentAddress,
+        encodedActions
+      );
+      const receipt = await tx.wait();
+
       return {
-        txHash: "0x0000000000000000000000000000000000000000000000000000000000000000",
+        txHash: receipt?.hash ?? tx.hash ?? "",
         simulated: false,
       };
     } catch (e) {
@@ -174,11 +223,14 @@ export abstract class BaseAgent {
     encodedActions: string[],
     roundId: bigint
   ): Promise<{ data: string }> {
-    // TODO: Implement Arena.executeBatch encoding
-    // For MVP: return stub
-    // In production: encode function call + parameters
+    this.requireRegisteredVaultId();
+
     return {
-      data: "0x", // Stub: empty data
+      data: arenaInterface.encodeFunctionData("executeBatch", [
+        roundId,
+        this.agentAddress,
+        encodedActions,
+      ]),
     };
   }
 
@@ -192,10 +244,46 @@ export abstract class BaseAgent {
     encodedActions: string[],
     roundId: bigint
   ): Promise<string> {
-    // TODO: Implement full TX signing
-    // For MVP: return stub
-    // In production: build TX object, sign with signer, return serialized TX
-    return "0x"; // Stub: empty signed TX
+    const txParams = await this.buildTxParams(encodedActions, roundId);
+    const signerLike = this.signer as Signer & {
+      getNonce?: () => Promise<number>;
+      provider?: {
+        getNetwork?: () => Promise<{ chainId: bigint | number }>;
+        getFeeData?: () => Promise<{
+          maxFeePerGas?: bigint | null;
+          maxPriorityFeePerGas?: bigint | null;
+        }>;
+      } | null;
+    };
+
+    const from = await this.signer.getAddress();
+    const nonce = typeof signerLike.getNonce === "function"
+      ? await signerLike.getNonce()
+      : undefined;
+    const network = typeof signerLike.provider?.getNetwork === "function"
+      ? await signerLike.provider.getNetwork()
+      : undefined;
+    const feeData = typeof signerLike.provider?.getFeeData === "function"
+      ? await signerLike.provider.getFeeData()
+      : undefined;
+
+    const tx = {
+      to: this.arenaAddress,
+      from,
+      data: txParams.data,
+      nonce,
+      chainId: network ? Number(network.chainId) : 196,
+      gasLimit: 1_500_000n,
+      maxFeePerGas: feeData?.maxFeePerGas ?? undefined,
+      maxPriorityFeePerGas: feeData?.maxPriorityFeePerGas ?? undefined,
+      type:
+        feeData?.maxFeePerGas != null || feeData?.maxPriorityFeePerGas != null
+          ? 2
+          : undefined,
+    };
+
+    const signedTx = await this.signer.signTransaction(tx);
+    return signedTx || "0x";
   }
 
   /// @notice Execute actions via Arena contract

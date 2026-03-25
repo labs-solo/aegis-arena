@@ -4,11 +4,11 @@
 
 `Arena.sol` is the main game orchestration contract. It manages:
 - Round creation and agent registration
-- Vault creation for each agent (FIX #1)
+- Binding pre-provisioned AEGIS vault IDs for each agent
 - Action execution via AEGIS Router
 - Final settlement with scoring and prize distribution
 
-All 8 known issues are fixed in this implementation.
+Only the current vault-binding slice is implemented here. `register()` binds pre-provisioned vault IDs, and the server/SDK can now validate those IDs against configured allowlists plus a best-effort `VaultRegistry.ownerOf()` probe when a readable AEGIS registry is configured. Other gameplay pieces described below remain staged or stubbed in the current repo.
 
 ---
 
@@ -32,16 +32,19 @@ struct RoundData {
 
 ## Core Functions
 
-### register(address[] agents) → roundId
-**Purpose:** Register agents for a new round and create vaults
+### register(address[] agents, uint256[] vaultIds) → roundId
+**Purpose:** Register agents for a new round and bind orchestrator-provisioned vault IDs
 
-**Key Implementation (FIX #1):**
+**Current implementation:**
 ```solidity
 for (uint256 i = 0; i < agents.length; i++) {
-  uint256 vaultId = engine.createVault();  // ← CRITICAL: Create vault
-  round.agentVaultIds[agent] = vaultId;   // Store mapping
+  uint256 vaultId = vaultIds[i];
+  require(vaultId != 0, "Arena: invalid vault");
+  round.agentVaultIds[agent] = vaultId;
 }
 ```
+
+`Arena` does not currently call AEGIS to create vaults itself. The deployer-owned orchestrator must provision vaults first, then bind them here. In this repo, the registration write path fails closed unless the provided vault IDs are positively confirmed by configured validation surfaces.
 
 **Returns:** Round ID
 
@@ -212,8 +215,8 @@ prizes[2] = thirdPrize;           // 250e6
 finalScores[agent] = 0
 ```
 
-### Vault Creation Failure (FIX #1)
-If `engine.createVault()` fails:
+### Vault Binding Failure
+If the orchestrator provides invalid vault input:
 - `register()` reverts
 - No vault is stored
 - Round is not created
@@ -248,4 +251,3 @@ If two agents have identical scores:
 - [ ] Start round (FIX #5: verify duration stored)
 - [ ] Execute batches
 - [ ] Settle round (FIX #4, #7: verify scoring and prizes)
-
