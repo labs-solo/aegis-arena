@@ -59,14 +59,24 @@ export interface AgentConfig {
 }
 
 // ================================================================
-// Bounty Types (CP-013 Agent 2)
+// Bounty Types (CP-017: State Machine Overhaul)
 // ================================================================
 
+/// @notice CP-017: BountyState enum values mirroring Bounty.sol BountyState.
+///         Replaces boolean `claimed` field. SDK consumers must update state checks.
+export enum BountyState {
+  Unclaimed = 0,   // default — no agent has claimed
+  Claimed = 1,     // claimed by agent; awaiting owner verification
+  Paid = 2,        // terminal — agent verified and paid
+  Expired = 3,     // terminal — observation or verification window elapsed
+}
+
 export interface BountyCondition {
-  minVolumeUsdc: bigint;      // Minimum USDC volume (6 decimals)
-  targetPriceMin: bigint;     // Min sqrtPriceX96
-  targetPriceMax: bigint;     // Max sqrtPriceX96
-  windowBlocks: bigint;       // Observation window in blocks
+  minVolumeUsdc: bigint;              // Minimum USDC volume (6 decimals)
+  targetPriceMin: bigint;             // Min sqrtPriceX96
+  targetPriceMax: bigint;             // Max sqrtPriceX96
+  observationWindowBlocks: bigint;    // CP-017: RENAMED from windowBlocks
+  verificationWindowBlocks: bigint;   // CP-017: NEW — verification deadline post-claim
 }
 
 export interface BountyRecord {
@@ -76,20 +86,18 @@ export interface BountyRecord {
   roundId: bigint;
   conditionHash: string;      // 0x-prefixed hex string (bytes32)
   condition: BountyCondition;
-  expiresAt: bigint;          // Block number
-  claimed: boolean;
+  state: BountyState;         // CP-017: REPLACES bool claimed
   claimedBy: string;          // 0x-prefixed address
-  claimTxBlock: bigint;       // Block number when claimed
+  createdAt: bigint;          // CP-017: NEW — block number at creation
+  claimedAt: bigint;          // CP-017: NEW — block number when claimed
 }
 
 export interface BountyClaimProof {
+  agentAddress: string;       // CP-017: NEW — agent address for proof binding (HIGH-02)
   bountyId: bigint;
-  volume: bigint;             // USDC volume traded
-  avgPrice: bigint;           // sqrtPriceX96
-  blockRange: {
-    startBlock: bigint;
-    endBlock: bigint;
-  };
+  roundId: bigint;            // CP-017: NEW — round ID for proof binding (HIGH-02)
+  volume: bigint;             // USDC volume traded (off-chain logging; on-chain data governs)
+  avgPrice: bigint;           // sqrtPriceX96 (off-chain logging; on-chain data governs)
 }
 
 export interface CreateBountyParams {

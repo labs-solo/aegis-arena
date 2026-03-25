@@ -271,33 +271,61 @@ contract Arena is IArena {
     return nextRoundId - 1;
   }
 
-  /// @notice Returns historical score snapshots for an agent in a round
-  /// @dev Used by Bounty.sol to verify claim conditions
+  /// @notice Returns trading performance snapshots for a given agent and round.
+  /// @dev CP-017 / CP-018: Called by Bounty.verifyAndPay() for on-chain condition validation.
+  ///      Signature updated to match IArena (CP-017). CP-018 implements real accumulation.
+  ///      MVP stub: returns mock data sufficient for hackathon.
   /// @param roundId The Arena round ID
-  /// @param agent The agent address to snapshot
-  /// @return snapshots Array of historical scores
-  function getSnapshots(uint256 roundId, address agent) external view returns (int256[] memory snapshots) {
-    // MVP stub: return mock snapshots for hackathon
-    // Post-hackathon: would aggregate from transaction history or AEGIS Engine
+  /// @param agentAddress The agent address to query
+  /// @return totalVolumeUsdc Cumulative USDC volume traded (mock: 5000 USDC)
+  /// @return avgSqrtPriceX96 Time-weighted average sqrt price X96 (mock: 0 — Phase 2)
+  /// @return startBlock Block number at round start (mock: current block)
+  /// @return endBlock Block number at round end (mock: 0 if active)
+  function getSnapshots(uint256 roundId, address agentAddress)
+    external
+    view
+    returns (
+      uint256 totalVolumeUsdc,
+      uint256 avgSqrtPriceX96,
+      uint256 startBlock,
+      uint256 endBlock
+    )
+  {
+    // CP-017: Signature updated to match IArena.getSnapshots(uint256, address) 4-tuple return.
+    // CP-018 is responsible for real accumulation. This stub satisfies the interface.
     RoundData storage round = rounds[roundId];
     require(round.roundId != 0, "Arena: round not found");
 
-    // Return mock snapshots array with one entry > 0
-    snapshots = new int256[](1);
-    snapshots[0] = int256(5000 * 10 ** 6); // 5000 USDC as mock score
+    // Verify agent is registered (vaultId != 0)
+    require(round.agentVaultIds[agentAddress] != 0, "Arena: agent not registered");
+
+    // MVP stub values — CP-018 replaces with real accumulated data
+    totalVolumeUsdc = 5000 * 10 ** 6;   // 5000 USDC mock volume
+    avgSqrtPriceX96 = 0;                 // Phase 2: real price accumulation
+    startBlock = round.startTime > 0 ? block.number : 0;
+    endBlock = 0;                         // 0 = active or unknown
   }
 
-  /// @notice Returns snapshot timestamps for an agent in a round
-  /// @dev Provides temporal context for bounty verification
+  /// @notice Returns snapshot timestamps for a given agent and round.
+  /// @dev CP-017: Signature updated to match IArena.getSnapshotTimestamps(uint256, address).
+  ///      CP-018 is responsible for real timestamp accumulation.
   /// @param roundId The Arena round ID
-  /// @return timestamps Array of block numbers where snapshots were recorded
-  function getSnapshotTimestamps(uint256 roundId) external view returns (uint256[] memory timestamps) {
+  /// @param agentAddress The agent address to query
+  /// @return startTimestamp Unix timestamp when the round started
+  /// @return endTimestamp Unix timestamp when the round ended (0 if active)
+  function getSnapshotTimestamps(uint256 roundId, address agentAddress)
+    external
+    view
+    returns (uint256 startTimestamp, uint256 endTimestamp)
+  {
     RoundData storage round = rounds[roundId];
     require(round.roundId != 0, "Arena: round not found");
 
-    // Return mock timestamps
-    timestamps = new uint256[](1);
-    timestamps[0] = block.number;
+    // Suppress unused variable warning (agentAddress used for future per-agent timestamps)
+    agentAddress;
+
+    startTimestamp = round.startTime;
+    endTimestamp = round.endTime > block.timestamp ? 0 : round.endTime;
   }
 
   // ================================================================

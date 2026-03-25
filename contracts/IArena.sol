@@ -3,103 +3,141 @@ pragma solidity ^0.8.20;
 
 /// @title IArena
 /// @notice Interface for AEGIS Arena game contract
+/// @dev CP-017: Added getSnapshots(uint256, address) and getSnapshotTimestamps(uint256, address)
+///      for on-chain bounty verification. CP-018 implements these in Arena.sol.
 interface IArena {
-  // ================================================================
-  // Events
-  // ================================================================
+    // ================================================================
+    // Events
+    // ================================================================
 
-  /// @notice Emitted when a new round is registered with agents
-  event RoundRegistered(uint256 indexed roundId, address[] agents);
+    /// @notice Emitted when a new round is registered with agents
+    event RoundRegistered(uint256 indexed roundId, address[] agents);
 
-  /// @notice Emitted when a round starts
-  event RoundStarted(uint256 indexed roundId, uint256 duration);
+    /// @notice Emitted when a round starts
+    event RoundStarted(uint256 indexed roundId, uint256 duration);
 
-  /// @notice Emitted when a round is settled with winners and prizes
-  event RoundSettled(
-    uint256 indexed roundId,
-    address[] winners,
-    uint256[] prizes,
-    uint256[] finalScores
-  );
-
-  /// @notice Emitted when an agent is registered for a round
-  event AgentRegistered(uint256 indexed roundId, address agent, uint256 vaultId);
-
-  /// @notice Emitted when agent actions are executed
-  event ActionsExecuted(uint256 indexed roundId, address agent, bytes[] actions);
-
-  // ================================================================
-  // Core Game Functions
-  // ================================================================
-
-  /// @notice Register agents for a new round and create their vaults
-  /// @param agents Array of agent addresses to participate
-  /// @return roundId The ID of the created round
-  function register(address[] calldata agents) external returns (uint256 roundId);
-
-  /// @notice Start a round with specified duration
-  /// @param roundId The round to start
-  /// @param durationSeconds Duration of the round in seconds
-  function startRound(uint256 roundId, uint256 durationSeconds) external;
-
-  /// @notice Execute batch of agent actions (encoded for AEGIS Router)
-  /// @param roundId The active round
-  /// @param agent The agent address executing actions
-  /// @param actions Array of encoded action bytes
-  function executeBatch(uint256 roundId, address agent, bytes[] calldata actions) external;
-
-  /// @notice Settle a round: compute final scores and distribute prizes
-  /// @param roundId The round to settle
-  /// @return winners Ranked winners (1st, 2nd, 3rd)
-  /// @return prizes Prize amounts in USDC
-  function settle(uint256 roundId)
-    external
-    returns (address[] memory winners, uint256[] memory prizes);
-
-  // ================================================================
-  // State Query Functions
-  // ================================================================
-
-  /// @notice Get current state of a round
-  /// @param roundId The round ID
-  /// @return startTime Timestamp when round started
-  /// @return endTime Timestamp when round ends
-  /// @return roundDuration Duration in seconds
-  /// @return settled Whether round has been settled
-  /// @return agents Array of participating agents
-  function getRoundState(uint256 roundId)
-    external
-    view
-    returns (
-      uint256 startTime,
-      uint256 endTime,
-      uint256 roundDuration,
-      bool settled,
-      address[] memory agents
+    /// @notice Emitted when a round is settled with winners and prizes
+    event RoundSettled(
+        uint256 indexed roundId,
+        address[] winners,
+        uint256[] prizes,
+        uint256[] finalScores
     );
 
-  /// @notice Get final scores and prizes for a settled round
-  /// @param roundId The round ID
-  /// @return agentsRanked Agents sorted by score (highest first)
-  /// @return scores Final portfolio values in USDC
-  /// @return prizes Prize allocations in USDC
-  function getFinalScores(uint256 roundId)
-    external
-    view
-    returns (address[] memory agentsRanked, uint256[] memory scores, uint256[] memory prizes);
+    /// @notice Emitted when an agent is registered for a round
+    event AgentRegistered(uint256 indexed roundId, address agent, uint256 vaultId);
 
-  /// @notice Get vault ID for an agent in a round
-  /// @param roundId The round ID
-  /// @param agent The agent address
-  /// @return vaultId The AEGIS vault ID created for this agent
-  function getAgentVault(uint256 roundId, address agent) external view returns (uint256 vaultId);
+    /// @notice Emitted when agent actions are executed
+    event ActionsExecuted(uint256 indexed roundId, address agent, bytes[] actions);
 
-  /// @notice Check if a round is active
-  /// @param roundId The round ID
-  /// @return active True if round is running
-  function isRoundActive(uint256 roundId) external view returns (bool active);
+    // ================================================================
+    // Core Game Functions
+    // ================================================================
 
-  /// @notice Get total number of rounds created
-  /// @return count Total rounds
-  function roundCount() external view returns (uint256 count);
+    /// @notice Register agents for a new round and create their vaults
+    /// @param agents Array of agent addresses to participate
+    /// @return roundId The ID of the created round
+    function register(address[] calldata agents) external returns (uint256 roundId);
+
+    /// @notice Start a round with specified duration
+    /// @param roundId The round to start
+    /// @param durationSeconds Duration of the round in seconds
+    function startRound(uint256 roundId, uint256 durationSeconds) external;
+
+    /// @notice Execute batch of agent actions (encoded for AEGIS Router)
+    /// @param roundId The active round
+    /// @param agent The agent address executing actions
+    /// @param actions Array of encoded action bytes
+    function executeBatch(uint256 roundId, address agent, bytes[] calldata actions) external;
+
+    /// @notice Settle a round: compute final scores and distribute prizes
+    /// @param roundId The round to settle
+    /// @return winners Ranked winners (1st, 2nd, 3rd)
+    /// @return prizes Prize amounts in USDC
+    function settle(uint256 roundId)
+        external
+        returns (address[] memory winners, uint256[] memory prizes);
+
+    // ================================================================
+    // State Query Functions
+    // ================================================================
+
+    /// @notice Get current state of a round
+    /// @param roundId The round ID
+    /// @return startTime Timestamp when round started
+    /// @return endTime Timestamp when round ends
+    /// @return roundDuration Duration in seconds
+    /// @return settled Whether round has been settled
+    /// @return agents Array of participating agents
+    function getRoundState(uint256 roundId)
+        external
+        view
+        returns (
+            uint256 startTime,
+            uint256 endTime,
+            uint256 roundDuration,
+            bool settled,
+            address[] memory agents
+        );
+
+    /// @notice Get final scores and prizes for a settled round
+    /// @param roundId The round ID
+    /// @return agentsRanked Agents sorted by score (highest first)
+    /// @return scores Final portfolio values in USDC
+    /// @return prizes Prize allocations in USDC
+    function getFinalScores(uint256 roundId)
+        external
+        view
+        returns (address[] memory agentsRanked, uint256[] memory scores, uint256[] memory prizes);
+
+    /// @notice Get vault ID for an agent in a round
+    /// @param roundId The round ID
+    /// @param agent The agent address
+    /// @return vaultId The AEGIS vault ID created for this agent
+    function getAgentVault(uint256 roundId, address agent) external view returns (uint256 vaultId);
+
+    /// @notice Check if a round is active
+    /// @param roundId The round ID
+    /// @return active True if round is running
+    function isRoundActive(uint256 roundId) external view returns (bool active);
+
+    /// @notice Get total number of rounds created
+    /// @return count Total rounds
+    function roundCount() external view returns (uint256 count);
+
+    // ================================================================
+    // Snapshot Functions (CP-017 / CP-018)
+    // ================================================================
+
+    /// @notice Returns trading performance snapshots for a given agent and round.
+    /// @dev Called by Bounty.verifyAndPay() for on-chain condition validation (HIGH-01 fix).
+    ///      CP-018 is responsible for the Arena.sol implementation with real accumulation.
+    ///      Return values are used by Bounty.sol to validate volume and price conditions.
+    /// @param roundId The Arena round identifier.
+    /// @param agentAddress The agent whose performance is queried.
+    /// @return totalVolumeUsdc Cumulative USDC volume traded by the agent in the round.
+    /// @return avgSqrtPriceX96 Time-weighted average sqrt price (X96 format) of agent trades.
+    /// @return startBlock Block number at which the round started.
+    /// @return endBlock Block number at which the round ended (0 if still active).
+    function getSnapshots(uint256 roundId, address agentAddress)
+        external
+        view
+        returns (
+            uint256 totalVolumeUsdc,
+            uint256 avgSqrtPriceX96,
+            uint256 startBlock,
+            uint256 endBlock
+        );
+
+    /// @notice Returns snapshot timestamps for a given agent and round.
+    /// @dev Supplementary temporal context for bounty verification and auditing.
+    ///      CP-018 is responsible for the Arena.sol implementation.
+    /// @param roundId The Arena round identifier.
+    /// @param agentAddress The agent whose timestamps are queried.
+    /// @return startTimestamp Unix timestamp when the round started for this agent.
+    /// @return endTimestamp Unix timestamp when the round ended (0 if still active).
+    function getSnapshotTimestamps(uint256 roundId, address agentAddress)
+        external
+        view
+        returns (uint256 startTimestamp, uint256 endTimestamp);
 }
