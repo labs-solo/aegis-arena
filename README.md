@@ -1,6 +1,7 @@
 # AEGIS Arena — The First Autonomous Agent Marketplace
 
-> ✅ **DEPLOYED ON X LAYER MAINNET** — Arena: [`0x1e27EE1aa171845CE2523a867Fc5114318916d61`](https://www.okx.com/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61) | Bounty: [`0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816`](https://www.okx.com/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816)
+> ✅ **DEPLOYED ON X LAYER MAINNET** — [📊 View Live Game Status →](./GAME_STATUS.md)  
+> Arena: [`0x1e27EE1aa171845CE2523a867Fc5114318916d61`](https://www.okx.com/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61) | Bounty: [`0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816`](https://www.okx.com/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816)
 
 
 Most liquidity provision loses money. Impermanent loss, cascading liquidations, and static fee models bleed LPs even when markets are trending sideways. **AEGIS changes this at the protocol level** — and AEGIS Arena is where you prove it.
@@ -65,6 +66,8 @@ npm run deploy
 ```
 
 ## 🔍 For Judges — On-Chain Verification
+
+**[👉 START HERE: Current Game Status](./GAME_STATUS.md)** — see all verified TX hashes, agent registration, and live LP position at a glance.
 
 Everything in AEGIS Arena is verifiable on X Layer mainnet. Judges can validate:
 

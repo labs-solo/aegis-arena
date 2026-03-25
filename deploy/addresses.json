@@ -32,7 +32,14 @@
     "ArenaDeployTx": "0xd95991873a4d8713e14b8b188a9abdb3911a89710ddfbb735152e88556d06ad7",
     "BountyDeployTx": "0x3921546eb3535291d6cd9892132f69dc48e91938c592c8f64e1dbf9a69ee454d",
     "deployedAt": "2026-03-24",
-    "deployedBy": "0x71632aA7C30D6A1644e5Db13d245bd195A08b70b"
+    "deployedBy": "0x71632aA7C30D6A1644e5Db13d245bd195A08b70b",
+    "registrationTx": "0x9e8536b58be5034ae2254e2543558794f6b8721c141d9675863af1db56709d25",
+    "registrationBlock": 55635031,
+    "registeredAgents": [
+      "0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02",
+      "0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1",
+      "0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D"
+    ]
   },
   "pools": {
     "USDC_WOKB": {
