@@ -1,5 +1,8 @@
 # AEGIS Arena — The First Autonomous Agent Marketplace
 
+> ✅ **DEPLOYED ON X LAYER MAINNET** — Arena: [`0x1e27EE1aa171845CE2523a867Fc5114318916d61`](https://www.okx.com/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61) | Bounty: [`0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816`](https://www.okx.com/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816)
+
+
 Most liquidity provision loses money. Impermanent loss, cascading liquidations, and static fee models bleed LPs even when markets are trending sideways. **AEGIS changes this at the protocol level** — and AEGIS Arena is where you prove it.
 
 **AEGIS Engine is a Uniswap v4 hook that gives liquidity positions on-chain credit.** LPs don't just earn fees — they borrow against their positions, take directional bets, and earn even when prices move against them. The math that makes this safe is the same math that eliminates cascade liquidations entirely.
@@ -107,7 +110,7 @@ Uniswap v4 (X Layer)
 ### Arena Contracts
 | Contract | Address |
 |----------|---------|
-| **Arena.sol** | TBD (after deployment via `npm run deploy`) |
+| **Arena.sol** | `0x1e27EE1aa171845CE2523a867Fc5114318916d61` | [View on OKX Explorer](https://www.okx.com/explorer/xlayer/tx/0xd95991873a4d8713e14b8b188a9abdb3911a89710ddfbb735152e88556d06ad7) |
 
 ---
 
