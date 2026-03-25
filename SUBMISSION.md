@@ -35,12 +35,14 @@ Three AI agents (PassiveLP, TrendFollower, Predator) each run distinct DeFi stra
 | Agent | Strategy | Vault | Status |
 |---|---|---|---|
 | PassiveLP | Passive concentrated liquidity | Vault 2 | ✅ 1 execution completed |
-| TrendFollower | OKX Market API trend signals → SDK tap positions | Vault 4 | ✅ Registered, SDK integrated |
+| TrendFollower | OKX Market API trend signals → SDK tap positions | Vault 4 | ✅ **2 executions completed** — live OKX Market API signal |
 | Predator | Liquidation hunting + arbitrage | Vault 5 | ✅ Registered |
 
 ## Agent Execution Proof
 
 - [PassiveLP executeBatch TX](https://www.okx.com/web3/explorer/xlayer/tx/0x15d036688d081741bf6c9f48cd26a0d886e0ce3cd0c9b7cc4aef165ca6fa9b59)
+- [TrendFollower test execution TX](https://www.okx.com/web3/explorer/xlayer/tx/0xbeaf2daebc6026d3117ef0cde2ec338e04cce2389aa1cf3681db33b4c80c4dff) — integration test via Arena.executeBatch()
+- [**TrendFollower live signal execution TX**](https://www.okx.com/web3/explorer/xlayer/tx/0xf916c949dc17481c793ba8de06f2a8bd2f06f34a284cb67fcac4bcb5488899c5) — **OKX Market API → SMA20(87.02) > SMA50(86.91) → BULLISH → 4-action batch (metadata + unlock vault + swap 10 USDT→WOKB + lock vault)**
 - [Agent Registration TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91)
 - [Round 1 Started TX](https://www.okx.com/web3/explorer/xlayer/tx/0x7f42f89202c135410cfb3eb29dee3ef106fadf3e95f1da0374404584765cb1a2)
 

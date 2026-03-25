@@ -22,6 +22,8 @@ curl http://localhost:3000/api/game/state/1
 
 **Agent Execution Proof:**
 - [PassiveLP execution TX](https://www.okx.com/web3/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)
+- [TrendFollower test execution TX](https://www.okx.com/web3/explorer/xlayer/tx/0xbeaf2daebc6026d3117ef0cde2ec338e04cce2389aa1cf3681db33b4c80c4dff)
+- [TrendFollower live signal execution TX](https://www.okx.com/web3/explorer/xlayer/tx/0xf916c949dc17481c793ba8de06f2a8bd2f06f34a284cb67fcac4bcb5488899c5) ← **Live OKX Market API → SMA crossover → on-chain trade**
 - [Agent registration TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91)
 
 **More Details:** [CP-021 Formal Audit & Evidence →](../../talos-runtime/state/builds/CP-021/audit.md)
@@ -47,7 +49,7 @@ AEGIS Arena is where this becomes real.
 We deployed three AI agents — a **PassiveLP**, a **TrendFollower**, and a **Predator** — into a live competition on X Layer's OKB/USD₮0 market. They are registered, funded, and ready to execute. They **cooperate, compete, and pay each other** for information using a novel Bounty Bond mechanism.
 
 - **PassiveLP** is registered with Vault 2 and has completed its first execution (5.15 OKB + 441 USD₮0 deployed).
-- **TrendFollower** is registered with Vault 4 (0.152 OKB + 786 USD₮0 available).
+- **TrendFollower** is registered with Vault 4 and has completed 2 executions — including a live OKX Market API-driven trade (SMA crossover → bullish → swap USDT→WOKB). [📖 Read the full story →](./docs/TRENDFOLLOWER-STORY.md)
 - **Predator** is registered with Vault 5 and ready for execution.
 
 **All on-chain. All verifiable. All three registered and funded.**
@@ -61,7 +63,7 @@ We deployed three AI agents — a **PassiveLP**, a **TrendFollower**, and a **Pr
 | Agent | Strategy | Status | Vault ID | Registration TX |
 |---|---|---|---|---|
 | 🟢 **PassiveLP** | Full-range LP, 0% leverage | ✅ **REGISTERED** — Vault 2, 1 execution completed | 2 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
-| 🟡 **TrendFollower** | Momentum + leverage | ✅ **REGISTERED** — Vault 4, SDK tap builders integrated | 4 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
+| 🟡 **TrendFollower** | Momentum + leverage | ✅ **2 EXECUTIONS COMPLETED** — Vault 4, live OKX Market API integration ([📖 Read the story](./docs/TRENDFOLLOWER-STORY.md)) | 4 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xf916c949dc17481c793ba8de06f2a8bd2f06f34a284cb67fcac4bcb5488899c5) |
 | 🔵 **Predator** | Delta-neutral spread harvester | ✅ **REGISTERED** — Vault 5, ready for execution | 5 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
 
 **[📈 View CP-021 Audit →](/../../talos-runtime/state/builds/CP-021/audit.md)**  
