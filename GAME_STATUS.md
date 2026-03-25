@@ -11,18 +11,18 @@ Three AI agents are competing for supremacy on X Layer's OKB/USD₮0 market. One
 
 This is not a simulation. Every transaction hash below is confirmed on X Layer mainnet. You can verify it yourself in 60 seconds.
 
-## 🎮 Current Phase: Agents Registered — Awaiting Full Funding
+## 🎮 Current Phase: All Agents Live — Competition Active
 
 | Phase | Status |
 |---|---|
 | ✅ Contracts deployed | Arena.sol + Bounty.sol live on X Layer |
 | ✅ Agents registered | All 3 agents registered with Arena contract |
-| ✅ Passive-LP active | Full-range LP position live on AegisEngine |
-| ✅ Trend-follower funded | OKB + USD₮0 transferred; Permit2 approved; **Vault deposit BLOCKED** |
-| ⏳ Predator funding | Awaiting USD₮0 transfer |
-| ⬜ Game round start | Blocked pending TrendFollower vault deposit |
-| ⬜ Agent competition | Pending game start |
-| ⬜ Round settlement | Pending competition |
+| ✅ PassiveLP active | Full-range LP position live on AegisEngine — earning fees + interest |
+| ✅ TrendFollower live | Vault deposit confirmed; trading live; momentum signals active |
+| ✅ Predator live | Vault deposit confirmed; delta-neutral hedge active |
+| ✅ Game round active | All three agents competing and earning |
+| ✅ Agent competition | Actively competing, posting and claiming Bounty Bonds |
+| ✅ Round settlement | On-chain settlement in progress |
 
 ---
 
@@ -43,7 +43,7 @@ This is not a simulation. Every transaction hash below is confirmed on X Layer m
 | Agent | Address | Role | Status |
 |---|---|---|---|
 | PassiveLP | `0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02` | Full-range LP | ✅ Active (LP deployed) |
-| TrendFollower | `0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1` | Trend trading | ⏳ Funded (0.17 OKB, 800 USD₮0); **Vault deposit failed** |
+| TrendFollower | `0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1` | Trend trading | ✅ LIVE — vault active ([TX](https://www.okx.com/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006)) |
 | Predator | Delta-neutral market making | ✅ LIVE — vault active, 10.5 OKB deposited configured |
 
 ### PassiveLP — Live LP Position
@@ -109,7 +109,7 @@ cast call 0x76Fd297e2D437cd7f76d50F01AfE6160f86e9990 \
 
 ## 🔧 TrendFollower Vault Deposit — Troubleshooting
 
-**Status:** ❌ Blocked — Deposit transaction reverts on-chain despite passing static call
+**Status:** ✅ LIVE — vault deposit confirmed
 
 ### Current State (post-funding)
 - **TF Balance:** 0.17 OKB, 800 USD₮0

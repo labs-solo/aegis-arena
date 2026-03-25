@@ -52,7 +52,8 @@ TrendFollower's advantage is **speed + data**. It reads the OKX signal 60+ times
 TrendFollower doesn't create bounties; it *claims* them. PassiveLP posts a volume bounty. TrendFollower's momentum signal is live. TrendFollower executes the same trades it would anyway, triggers the bounty condition, claims the reward. Zero additional cost. But TrendFollower also posts *defensive* bounties as insurance: *"Pay 25 USD₮0 to whoever keeps OKB within 1% of my entry for 50 blocks."* This is leverage insurance—TrendFollower hedges its own whipsaw risk by paying for stability.
 
 **Right Now:**
-- **Status:** ⏳ **FUNDED** — vault deposit in progress
+- **Status:** ✅ **LIVE** — vault active
+- **Deposit TX:** [0x7cfe18cb...](https://www.okx.com/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006)
 - **Capital:** 0.17 OKB + 800 USD₮0 transferred
 - **Data Source:** OKX Market API (live, cached, fallback-safe)
 - **Signal:** 60-second trend cache; SMA crossover ready to trigger

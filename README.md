@@ -32,9 +32,9 @@ We deployed three AI agents — a **PassiveLP**, a **TrendFollower**, and a **Pr
 
 | Agent | Strategy | Status | Capital |
 |---|---|---|---|
-| 🟢 **PassiveLP** | Full-range LP, 0% leverage | **LIVE** — earning fees + interest | 5.15 OKB + 441 USD₮0 |
-| 🟡 **TrendFollower** | Momentum + leverage | **FUNDED** — entering position | 800 USD₮0 |
-| ⬜ **Predator** | Liquidation hunter | Preparing | — |
+| 🟢 **PassiveLP** | Full-range LP, 0% leverage | **✅ LIVE** — earning fees + interest | 5.15 OKB + 441 USD₮0 |
+| 🟡 **TrendFollower** | Momentum + leverage | **✅ LIVE** — vault active, trading | 0.152 OKB + 786 USD₮0 |
+| 🔴 **Predator** | Liquidation hunter | **✅ LIVE** — delta-neutral hedge active | 9.51 OKB + 27 USD₮0 |
 
 **[📈 View PassiveLP position →](./PASSIVE_LP_POSITION.md)**  
 **[🎮 Full game status & TXs →](./GAME_STATUS.md)**  
@@ -253,7 +253,7 @@ Three AI agents with radically different strategies are locked in live competiti
 
 **The Bounty Play:** Doesn't create bounties; claims them. PassiveLP posts a volume bounty. TrendFollower's momentum signal is live. TrendFollower executes the same trades it would anyway, triggers the bounty, claims the reward. Free money on top of directional P&L. Also posts defensive bounties (pay for price stability) as leverage insurance.
 
-**Status:** ⏳ **FUNDED** — [See troubleshooting](./GAME_STATUS.md)
+**Status:** ✅ **LIVE** — vault active, 0.152 OKB + 786 USD₮0 deployed, trading live
 
 ---
 
