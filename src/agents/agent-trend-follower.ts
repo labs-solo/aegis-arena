@@ -29,6 +29,7 @@ import {
 import type { BountyCondition, BountyRecord } from '../sdk/types.js';
 import { MarketClient } from '../sdk/market.js';
 import { okxDexClient } from '../lib/okx-dex.js';
+import { buildTapOpenPosition, buildTapClosePosition } from '../sdk/tap-builders.js';
 
 export class AgentTrendFollower extends BaseAgent {
   private trendWindow = 5; // Check 5-block moving average
@@ -142,38 +143,69 @@ export class AgentTrendFollower extends BaseAgent {
         // Step 3: Use SDK builders (canonical semantics)
         // IMPORTANT: This replaces ALL local leverage heuristics
         // SDK builders are the authoritative source for tap math semantics
+        // CP-022: Now executing with real builder integration
         if (trend > 0) {
           // Uptrend: open tap position (long WOKB via quote-derived route)
           console.log(
-            "[TrendFollower] CP-022: Uptrend — would call buildTapOpenPosition() with OKX DEX quote-derived inputs"
+            "[TrendFollower] CP-022: Uptrend — calling buildTapOpenPosition() with OKX DEX quote-derived inputs"
           );
           console.log(
             `[TrendFollower] Quote-derived inputs: fromToken=${fromToken}, toToken=${toToken}, inAmount=${quoteMetrics.inAmount}, outAmount=${quoteMetrics.outAmount}`
           );
-          // CANONICAL BUILDER INTEGRATION:
-          // const openAction = buildTapOpenPosition({
-          //   vault: this.vaultId,  // SDK canonical: registered vault ID from Arena
-          //   swapInputAmount: quoteMetrics.inAmount,
-          //   swapRoute: swapActions,  // Quote-derived aggregated route from OKX DEX
-          //   swapQuoteAmount: quoteMetrics.outAmount,
-          //   targetLTV: targetLTVPercent  // Explicit SDK output, not hardcoded heuristic
-          // });
-          // actions.push(openAction);
+          
+          // CANONICAL BUILDER INTEGRATION: Now active
+          try {
+            const openActions = buildTapOpenPosition({
+              vaultId: this.vaultId,  // SDK canonical: registered vault ID from Arena
+              quote: okxQuote,
+              inputToken: fromToken,
+              outputToken: toToken,
+              leverage: 1.0, // No additional leverage for MVP; principal = swap output
+            });
+            actions.push(...openActions);
+            console.log(
+              `[TrendFollower] Open position built: ${openActions.length} actions queued for Arena.executeBatch()`
+            );
+          } catch (builderError) {
+            console.error(
+              "[TrendFollower] buildTapOpenPosition failed:",
+              builderError instanceof Error ? builderError.message : builderError
+            );
+            // Fail-closed: do not proceed with malformed actions
+            throw builderError;
+          }
         } else {
           // Downtrend: close tap position (exit, short WOKB)
           console.log(
-            "[TrendFollower] CP-022: Downtrend — would call buildTapClosePosition() with OKX DEX quote-derived close semantics"
+            "[TrendFollower] CP-022: Downtrend — calling buildTapClosePosition() with OKX DEX quote-derived close semantics"
           );
           console.log(
-            `[TrendFollower] Quote-derived close inputs: sell WOKB via route=${swapActions.length} steps, expectedOut=${expectedOutMin}`
+            `[TrendFollower] Quote-derived close inputs: sell ${quoteAmount} WOKB, expectedOut=${expectedOutMin}`
           );
-          // CANONICAL BUILDER INTEGRATION:
-          // const closeAction = buildTapClosePosition({
-          //   vault: this.vaultId,  // SDK canonical: same registered vault
-          //   swapRoute: swapActions,  // Quote-derived close route from OKX DEX
-          //   swapMinOut: expectedOutMin,  // Quote-derived minimum output
-          // });
-          // actions.push(closeAction);
+          
+          // CANONICAL BUILDER INTEGRATION: Now active
+          try {
+            const closeActions = buildTapClosePosition({
+              vaultId: this.vaultId,  // SDK canonical: same registered vault
+              positionId: 0,  // MVP: assume position 0; production would track position IDs
+              quote: okxQuote,
+              sellToken: fromToken,
+              buyToken: toToken,
+              closeAmount: quoteAmount,
+              minOutputAmount: expectedOutMin,
+            });
+            actions.push(...closeActions);
+            console.log(
+              `[TrendFollower] Close position built: ${closeActions.length} actions queued for Arena.executeBatch()`
+            );
+          } catch (builderError) {
+            console.error(
+              "[TrendFollower] buildTapClosePosition failed:",
+              builderError instanceof Error ? builderError.message : builderError
+            );
+            // Fail-closed: do not proceed with malformed actions
+            throw builderError;
+          }
         }
       } catch (error) {
         console.warn(
