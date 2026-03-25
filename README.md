@@ -50,7 +50,7 @@ Most liquidity provision loses money. Impermanent loss, cascading liquidations, 
 
 ### Why No Cascade Liquidations Matter
 
-In traditional DeFi (Compound, Aave, even Uniswap v3): when a borrower gets liquidated, the liquidation pressure cascades — price drops, triggers more liquidations, collapses the pool. **AEGIS uses sqrt(K) solvency: each vault is isolated, borrows against the geometric mean of its own liquidity, and can only be liquidated to the point of solvency — never below.** Concrete example: "Agent B's over-leveraged position gets peeled — not liquidated — AEGIS takes back exactly what it needs to stay solvent and leaves the rest. The pool price doesn't move. Agent A's position is unaffected." **This means AI agents can run 3x leverage aggressively, in competition, on a shared pool, without any risk of systemic collapse.**
+In traditional DeFi (Compound, Aave, even Uniswap v3): when a borrower gets liquidated, the liquidation pressure cascades — price drops, triggers more liquidations, collapses the pool. **AEGIS uses sqrt(K) solvency: each vault is isolated, borrows against the geometric mean of its own liquidity, and can only be liquidated to the point of solvency — never below.** Concrete example: Agent B provides 100 sL (= sqrt(100) = 10 sqrt units). K_constant = 1000. Max safe debt = 10 × 1000 = 10,000 USD₮0. Agent B borrows 9,000 USD₮0. Price moves 20% against Agent B — their position value drops, but LP fees accrue continuously. AEGIS peels the position (reduces debt to solvency threshold), not liquidates it to zero. Agent A is unaffected. The pool price does not move from the peeling action. **This means AI agents can run 3x leverage aggressively, in competition, on a shared pool, without any risk of systemic collapse.**
 
 ### The Arena Pitch
 
@@ -239,7 +239,9 @@ Three AI agents with radically different strategies are locked in live competiti
 
 **The Edge:** Doesn't need to predict direction. Only needs volume. While other agents wrestle with timing, PassiveLP collects rent from every swap, every borrow, every trade.
 
-**The Bounty Play:** Posts volume bounties ("500k USD₮0 swaps = 50 USD₮0 reward"). TrendFollower executes trades it planned anyway and claims the bounty. PassiveLP pays 50 but earns 250 in fees. Net: +200. The bounty is a customer acquisition cost.
+**The Bounty Play:** Posts volume bounties ("500k USD₮0 swaps = 50 USD₮0 reward"). TrendFollower executes trades it planned anyway and claims the bounty. Assuming PassiveLP holds ~50% of pool liquidity: fee earned = 500k × 0.05% × 50% = 125 USD₮0. Net on 50 USD₮0 bounty: +75 USD₮0. The bounty is a customer acquisition cost.
+
+(LP share fraction varies; higher share → higher fee income per bounty dollar.)
 
 **Status:** ✅ **LIVE** — [View position](./PASSIVE_LP_POSITION.md)
 
@@ -296,7 +298,7 @@ See [**AGENTS.md**](./AGENTS.md) for full personality profiles, real-time status
 
 - **PassiveLP posts bounties** → "Trade 500k USD₮0, earn 50 USD₮0" → Attracts TrendFollower volume
 - **TrendFollower already trades** → Bounty is free money on top of directional P&L → Claims it
-- **PassiveLP earns more fees** → Paid 50 for 500k volume → Earned 250 in swap fees → Net +200
+- **PassiveLP earns more fees** → Paid 50 for 500k volume → Earned ~125 in swap fees (at ~50% LP share) → Net +75
 - **Predator monitors bounties** → Sees distressed positions posting rescue bounties → Decides: rescue for the bounty, or liquidate for the bigger payoff?
 
 **Every swap, borrow, and bounty claim is on-chain and verifiable.** Judges see not just trading, but *cooperation* — agents forming coalitions, paying each other for services, executing sophisticated multi-agent strategy.
@@ -316,9 +318,9 @@ See [**AGENTS.md**](./AGENTS.md) for full personality profiles, real-time status
 ### PassiveLP Deep Dive: Dual Income Streams
 
 **Income Stream 1: Trading Fees**
-- **Source:** Uniswap v4 swap fees on USDC/WOKB pool (0.05% = 500 bips per swap)
+- **Source:** Uniswap v4 swap fees on OKB/USD₮0 pool (0.05% = 5 bips per swap)
 - **Collection:** Automatic via LP share price appreciation (no explicit claim opcode needed)
-- **Example:** 10,000 USDC swap volume → 5 USDC fee pool → PassiveLP's share ≈ 2.5 USDC (if 50% of total LP capital)
+- **Example:** 10,000 USD₮0 swap volume → 5 USD₮0 fee pool → PassiveLP's share ≈ 2.5 USD₮0 (if 50% of total LP capital)
 - **Why Full-Range?** Full-range position (-887,272 to +887,272 ticks) captures 100% of pool volume; concentrated positions miss fees if price exits range
 
 **Income Stream 2: Borrow Interest**
@@ -339,8 +341,14 @@ See [**AGENTS.md**](./AGENTS.md) for full personality profiles, real-time status
 - PassiveLP creates bounties to incentivize volume that generates fees
 - Heuristic: spend 10% of idle balance on bounty IF expected fee return > bounty cost
 - **OKX Market API Integration:** Before creating a bounty, PassiveLP queries 24h trading volume on OKB/USD to estimate fee income and avoid underwater bounties
-- **Dynamic Volume Target:** Bounty condition scales with bounty size (bounty = R USDC → target volume = 10R USDC)
-- **Example Breakeven:** 5 USDC bounty needs 50 USDC volume → generates 0.025 USDC fee (break-even at 200x volume multiplier; 10x is conservative)
+- **Dynamic Volume Target:** Bounty condition scales with bounty size (bounty = R USD₮0 → target volume = 10R USD₮0)
+- **Example Breakeven:** 5 USD₮0 bounty at 5-bip (0.05%) fee rate with PassiveLP holding ~50% of pool liquidity:
+  - Break-even volume = 5 / (0.0005 × 0.5) = 20,000 USD₮0
+  - At a "50k USD₮0 swaps" bounty condition: fee earned = 50,000 × 0.05% × 50% = 12.5 USD₮0
+  - Net on 5 USD₮0 bounty: 12.5 − 5 = +7.5 USD₮0 profit
+  - The bounty pays off when volume exceeds the break-even threshold (20k USD₮0)
+
+  (LP share fraction varies; higher share → higher fee income per bounty dollar.)
 
 #### Funding
 

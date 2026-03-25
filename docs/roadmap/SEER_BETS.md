@@ -4,6 +4,18 @@
 **Timeline:** 4-8 weeks after hackathon completion  
 **Feasibility:** 5/10 for 48-hour hackathon (deferred due to complexity)
 
+## Preconditions (Satisfied by CP-017 + CP-018)
+
+Seer Bets settlement depends on `Arena.getSnapshots(roundId, agent)` returning accurate
+volume and price data.
+
+- `Arena.getSnapshots()` is implemented and deployed by CP-018 (commit 30c26d872). Precondition satisfied.
+- Phase 2a (FuturesMarket.sol) may proceed with `getSnapshots()` as a verified dependency.
+- `avgSqrtPriceX96` remains 0 in Phase 1 Arena snapshots; Seer Bets price-range settlement
+  must await Phase 2 Arena price accumulation (see CP-018 scope).
+- The "Settlement via Arena Snapshots" code example below is operational for volume checks;
+  price-range settlement awaits Phase 2.
+
 ---
 
 ## Overview

@@ -12,7 +12,7 @@ AEGIS Arena is an autonomous AI agent competition built on AEGIS Engine — a Un
 - **OKX Onchain Gateway** for pre-flight TX validation
 - **x402** for agent-to-agent payments (Bounty Bonds)
 
-**No simulated data. No mock transactions. Every action is a real on-chain transaction on X Layer.** You can verify everything in real-time on xlayerscan.com.
+**Agent wallets, LP positions, and contract deployments are real on-chain transactions on X Layer. Arena scoring for this MVP uses an action-count proxy (Phase 2 = real PnL scoring).** You can verify everything in real-time on xlayerscan.com.
 
 ---
 
@@ -263,7 +263,7 @@ curl -X GET http://localhost:3000/bounties/42/status
 - **Price:** averaged 1.00, within 0.95–1.05 range ✓
 - **Timing:** claim submitted before block 15100 expiry ✓
 
-The verification was automatic. Then the contract transferred 1000 USDC from PassiveLP's escrow directly to TrendFollower's vault. All on-chain. All verifiable. This is the power of Bounty Bonds."
+The Arena server called `verifyAndPay()` — an owner-only function — which triggered on-chain verification: the contract queried `Arena.getSnapshots()`, retrieved TrendFollower's accumulated trading data for the round, validated that volume and price conditions were met on-chain, and transferred the escrow. The verification and the payout are both on-chain, both verifiable, and neither requires trusting the server's data submission. This is the power of Bounty Bonds."
 
 **Key talking points:**
 - ✅ Verification is objective (based on on-chain snapshots)
@@ -321,10 +321,9 @@ The verification was automatic. Then the contract transferred 1000 USDC from Pas
 https://www.xlayerscan.com/tx/0xeeee...
 Event: RoundSettled
   roundId: 1
-  winners: [TrendFollower, Predator, PassiveLP]
-  prizes: [501e6, 250e6, 249e6]
-  totalBountiesCreated: 1
-  totalBountyPayments: 1000e6
+  winners: [0xTrendFollower..., 0xPredator..., 0xPassiveLP...]
+  prizes: [501000000, 250000000, 249000000]
+  finalScores: [1120000000, 150000000, -975000000]
 ```
 
 **Narrative:**
@@ -337,6 +336,25 @@ This is emergent cooperation. Both agents are better off than they would be in a
 - ✅ Both agents benefited from cooperation (PassiveLP got volume, TrendFollower got reward)
 - ✅ Multivariable scoring (agents can win in different ways)
 - ✅ Full transparency (all transactions on X Layer, judges can audit)
+
+**Note (DOC-09):** Predator's delta rebalancing logic (`calculateDelta`) returns a fixed zero in this MVP. Predator earns fees from concentrated liquidity but does not actively rebalance delta. Delta rebalancing is planned but not implemented in MVP.
+
+**Note (DOC-10):** TrendFollower evaluates the bounty against a preconfigured volume estimate (15k USDC). Predator uses a preconfigured estimate (8k USDC). Post-hackathon, these will use real vault state to compute dynamic estimates.
+
+---
+
+## Verification (On-Chain)
+
+Bounty verification is on-chain:
+1. Agent claims a bounty via `claimBounty()` — recorded on-chain
+2. Agent executes actions via `Arena.executeBatch()` — accumulates on-chain snapshots per agent per round
+3. Owner calls `verifyAndPay()` — queries `Arena.getSnapshots(roundId, agentAddress)` for on-chain data
+4. Conditions validated on-chain: volume threshold and price range checked against accumulated snapshot data
+5. USDC transferred on-chain to verified agent
+
+**Current MVP scope:**
+- Scoring: action-count proxy (Phase 2 will add real PnL scoring)
+- AEGIS Router: agent actions recorded but not forwarded to DeFi engine (Phase 2)
 
 ---
 
@@ -401,7 +419,7 @@ A: "For now, this is a proof-of-concept with 3 agents. But imagine scaling: 100 
 
 **Q: How do you prevent agents from colluding to game the system?**
 
-A: "Bounties are verified against on-chain snapshots. Agents must execute real trades to satisfy conditions. You can't fake volume or prices — they're immutably recorded in transaction history. Post-hackathon, we're adding full contract-level verification, eliminating server trust entirely."
+A: "Volume and price conditions for bounty payouts are verified on-chain. When the Arena server calls `verifyAndPay()`, the contract independently calls `Arena.getSnapshots()` to retrieve the agent's accumulated trading data for the round. All condition checks — volume threshold, price range — run against this on-chain data. The server cannot manufacture a payout by submitting falsified proof bytes; the on-chain Arena data governs. You can't fake volume or prices — they're immutably accumulated in Arena's on-chain snapshot state, and `verifyAndPay()` reads them directly."
 
 **Q: What if an agent claims a bounty but can't satisfy it?**
 

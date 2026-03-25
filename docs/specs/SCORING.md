@@ -14,36 +14,39 @@ Early scoring treated sL shares and tokens separately without converting to a co
 
 ## Conversion Formulas
 
-### 1. sL Shares → USDC
+### 1. sL Shares → USD₮0
 
-sL shares represent proportional ownership of the USDC/WOKB pool's liquidity.
+sL shares represent proportional ownership of the OKB/USD₮0 pool's liquidity.
 
 ```
-Agent's USDC equivalent = (agentSLBalance / totalSLSupply) × pool_usdc_reserves
+Agent's USD₮0 equivalent = (agentSLBalance / totalSLSupply) × pool_usd_t0_reserves
 ```
 
 **Example:**
 - Agent has 1000 sL shares
 - Total sL supply: 100,000
-- Pool USDC reserves: 10M USDC
-- **Agent's USDC equivalent:** (1000 / 100,000) × 10M = **100k USDC**
+- Pool USD₮0 reserves: 10M USD₮0
+- **Agent's USD₮0 equivalent:** (1000 / 100,000) × 10M = **100k USD₮0**
 
-### 2. WOKB → USDC (CRITICAL: sqrtPriceX96 Conversion)
+### 2. OKB → USD₮0 (CRITICAL: sqrtPriceX96 Conversion)
 
-Uniswap v4 stores prices as `sqrtPriceX96` (96-bit fixed point). To convert:
+Uniswap v4 stores prices as `sqrtPriceX96` (96-bit fixed point). To convert correctly:
 
 ```
-sqrtPrice (as number) = current pool.sqrtPrice
-price = (sqrtPrice / 2^96)^2
-usdcEquivalent = wokb_balance × price
+Correct: FullMath.mulDiv(sqrtPriceX96, sqrtPriceX96, 1 << 192) (Solidity)
+         or scaled BigInt (TypeScript). See ARENA_CONTRACT.md for full details.
 ```
 
-**Example with numbers:**
-- WOKB held: 10 tokens
+**Illustrative example with decimal approximation:**
+- OKB held: 10 tokens
 - sqrtPriceX96 from pool: 1000000000000000000000000000 (raw)
 - sqrtPrice (decimal): 1000000000000000000000000000 / 2^96 ≈ 15259.6
 - price: 15259.6^2 ≈ 232,856,640
-- WOKB → USDC: 10 × 232,856,640 ≈ 2,328,566,400 USDC
+- OKB → USD₮0: 10 × 232,856,640 ≈ 2,328,566,400 USD₮0
+
+*Note: the above is a decimal illustration. In Solidity uint256 arithmetic, use
+`FullMath.mulDiv(sqrtPriceX96, sqrtPriceX96, 1 << 192)` to avoid truncation and overflow.
+See ARENA_CONTRACT.md for the complete precision-correct approach.*
 
 (This is an illustrative example; actual prices will vary.)
 
@@ -60,46 +63,46 @@ idle_usdc_value = idle_usdc_balance
 ## Complete Scoring Example
 
 ### Initial Setup
-- Pool: USDC/WOKB (5 bps fee)
+- Pool: OKB/USD₮0 (dynamic fee, AEGIS Hook)
 - Total sL supply: 100,000 shares
-- Pool reserves: 10M USDC, 10k WOKB
-- sqrtPriceX96: 1415394265625 (represents ~1 WOKB = 1000 USDC)
+- Pool reserves: 10M USD₮0, 10k OKB
+- sqrtPriceX96: 1583421913... (representative for OKB at ~20 USD₮0)
 
 ### Agent Alpha: Conservative (PassiveLP)
 **Holdings at settlement:**
 - sL shares: 1000
-- Idle USDC: 50,000
-- WOKB: 0
+- Idle USD₮0: 50,000
+- OKB: 0
 
 **Scoring calculation:**
-1. sL → USDC: (1000 / 100,000) × 10M = **100,000 USDC**
-2. WOKB → USDC: 0 × price = **0 USDC**
-3. Idle USDC: **50,000 USDC**
-4. **Total score: 150,000 USDC**
+1. sL → USD₮0: (1000 / 100,000) × 10M = **100,000 USD₮0**
+2. OKB → USD₮0: 0 × price = **0 USD₮0**
+3. Idle USD₮0: **50,000 USD₮0**
+4. **Total score: 150,000 USD₮0**
 
 ### Agent Beta: Aggressive (TrendFollower)
 **Holdings at settlement:**
 - sL shares: 2000
-- Idle USDC: 0
-- WOKB: 100 (borrowed capital deployed)
+- Idle USD₮0: 0
+- OKB: 100 (borrowed capital deployed)
 
 **Scoring calculation:**
-1. sL → USDC: (2000 / 100,000) × 10M = **200,000 USDC**
-2. WOKB → USDC: 100 × 1000 = **100,000 USDC** (using price ≈ 1000)
-3. Idle USDC: **0 USDC**
-4. **Total score: 300,000 USDC**
+1. sL → USD₮0: (2000 / 100,000) × 10M = **200,000 USD₮0**
+2. OKB → USD₮0: 100 × 1000 = **100,000 USD₮0** (using price ≈ 1000)
+3. Idle USD₮0: **0 USD₮0**
+4. **Total score: 300,000 USD₮0**
 
 ### Agent Gamma: Market-Neutral (Predator)
 **Holdings at settlement:**
 - sL shares: 1500
-- Idle USDC: 25,000
-- WOKB: 50
+- Idle USD₮0: 25,000
+- OKB: 50
 
 **Scoring calculation:**
-1. sL → USDC: (1500 / 100,000) × 10M = **150,000 USDC**
-2. WOKB → USDC: 50 × 1000 = **50,000 USDC**
-3. Idle USDC: **25,000 USDC**
-4. **Total score: 225,000 USDC**
+1. sL → USD₮0: (1500 / 100,000) × 10M = **150,000 USD₮0**
+2. OKB → USD₮0: 50 × 1000 = **50,000 USD₮0**
+3. Idle USD₮0: **25,000 USD₮0**
+4. **Total score: 225,000 USD₮0**
 
 ### Final Ranking
 1. **Beta: 300,000 USDC** 🥇 (Winner)
@@ -153,9 +156,10 @@ agent receives no prize
 ### Rounding and Precision
 - Use 256-bit integer arithmetic (Solidity `uint256`)
 - sL share conversions: use pool reserves directly
-- sqrtPrice conversions: multiply before dividing to avoid truncation
-  - Correct: `(balance × (sqrtPrice / 2^96)^2)`
-  - Avoid: `balance × sqrtPrice / 2^96 / 2^96` (loses precision)
+- sqrtPrice conversions: use `FullMath.mulDiv(sqrtPriceX96, sqrtPriceX96, 1 << 192)` (Solidity) or scaled BigInt (TypeScript)
+  - See ARENA_CONTRACT.md for complete precision-correct approach
+  - Avoid: `(balance × (sqrtPrice / 2^96)^2)` — truncates to 0 in integer arithmetic
+  - Avoid: `balance × sqrtPrice / 2^96 / 2^96` — loses precision
 
 ---
 

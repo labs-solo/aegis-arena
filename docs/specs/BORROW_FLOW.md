@@ -1,5 +1,18 @@
 # 3-Batch Borrow Flow (FIX #4 Foundation)
 
+## Important: Two Separate Calls
+
+This document describes the 3-batch AEGIS Router opcode pattern. Arena.executeBatch() is a
+*separate* call used to record agent actions for scoring. The two calls are independent:
+
+- `AegisRouterV1.execute(actions)` — submits AEGIS opcodes (unlock, borrow, lock) to the Engine
+- `Arena.executeBatch(roundId, agent, actions)` — records the action batch for scoring
+
+In the TypeScript examples below, replace `arena.executeBatch(...)` with `router.execute(...)`
+for the actual vault operations.
+
+---
+
 ## Why 3 Batches?
 
 The AEGIS Engine uses a **2-phase unlock pattern** for debt operations:
@@ -231,16 +244,30 @@ Example:
 
 ## Error Scenarios
 
-### Insufficient Collateral
+### Error Scenario: Batch 1 Failure Leaves Vault Unlocked
+
 ```
 Agent borrows 100 USDC, but sqrt(K) = 50 USDC
 → AE_MODIFY_DEBT reverts
 → Batch 1 fails
-→ Batch 2 never executes (vault already locked from Batch 0)
-→ **ISSUE:** Vault is left unlocked!
+→ Batch 2 never executes
+→ **ISSUE:** Vault is left in unlocked state!
 ```
 
-**Solution:** In production, use try-catch or check solvency before submitting.
+**Current behavior:** If Batch 1 (AE_MODIFY_DEBT) reverts after Batch 0 (AE_UNLOCK_VAULT)
+has executed, the vault is left in an unlocked state.
+
+**Status:** Known issue — no viable resolution in the current architecture.
+- "Check solvency before submitting" reduces the window but does not eliminate it
+  (race condition between check and submission).
+- A single-transaction atomic batch (all 3 operations atomic) would resolve this but
+  requires contract changes outside this CP's scope.
+
+**Mitigation for MVP:** Monitor vault state after any failed batch. If vault shows
+unlocked state after a failed borrow attempt, manually submit Batch 2 (AE_LOCK_VAULT)
+to restore safe state before proceeding.
+
+**Post-hackathon fix:** Implement atomic 3-batch wrapper at the contract level.
 
 ### Network Congestion
 ```

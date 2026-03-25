@@ -219,7 +219,7 @@ for (const bountyId of activeBounties) {
 }
 
 private canSatisfyBountyCondition(condition: BountyCondition): boolean {
-  // TrendFollower estimates: can execute 15k USDC in trades
+  // MVP: hardcoded estimate. Post-hackathon: compute from vault state and current leverage.
   const estimatedVolume = 15000n * 10n ** 6n;
   
   // Price range should be permissive (±5%)
@@ -291,8 +291,8 @@ class AgentPredator extends BaseAgent {
   }
 
   private calculateDelta(state: GameState): bigint {
-    // Sum all long/short positions
-    // Return 0 if perfectly neutral
+    // MVP STUB: always returns 0 (no dynamic delta calculation)
+    // Post-hackathon: will compute net long/short exposure across positions
     return 0n;
   }
 }
@@ -306,9 +306,9 @@ class AgentPredator extends BaseAgent {
 3. **Monitor:** Calculate delta, rebalance if needed
 
 ### Why It Works
-- **Delta-neutral:** Long WOKB + short USDC debt = market-neutral
+- **Delta-neutral:** Long OKB + short USD₮0 debt = market-neutral
 - **Concentrated liquidity:** Higher fee per $ deployed
-- **Rebalancing:** Locks in gains when delta drifts
+- **Rebalancing:** Locks in gains when delta drifts (planned Phase 2 — `calculateDelta` always returns 0 in MVP)
 - **Stable:** Profits from volatility even if price doesn't move
 
 ### Bounty Integration: Conservative Claiming
@@ -338,7 +338,7 @@ for (const bountyId of activeBounties) {
 }
 
 private canSatisfyBountyCondition(condition: BountyCondition): boolean {
-  // Predator estimates: can execute 8k USDC (conservative)
+  // MVP: hardcoded estimate. Post-hackathon: compute from vault state and current leverage.
   const estimatedVolume = 8000n * 10n ** 6n;
   
   // Requires tight price range (±2%), compatible with hedging
