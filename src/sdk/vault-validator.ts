@@ -3,7 +3,7 @@ import type {
   ArenaAgentBinding,
   VaultValidationEvidence,
   VaultValidationResult,
-} from "./types";
+} from './types.js';
 
 const VAULT_REGISTRY_ABI = [
   "function ownerOf(uint256 tokenId) view returns (address)",

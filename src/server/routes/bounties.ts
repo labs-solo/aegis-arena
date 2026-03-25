@@ -6,8 +6,8 @@
 
 import { Router, Request, Response } from "express";
 import { ethers } from "ethers";
-import { x402Middleware } from "../middleware/x402";
-import { createArenaClientFromConfig, createArenaServiceConfigFromEnv } from "../services/arena";
+import { x402Middleware } from '../middleware/x402.js';
+import { createArenaClientFromConfig, createArenaServiceConfigFromEnv } from '../services/arena.js';
 
 const router = Router();
 

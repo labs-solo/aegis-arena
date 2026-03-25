@@ -29,13 +29,13 @@
 
 import { Signer } from "ethers";
 import { ethers } from "ethers";
-import { BaseAgent } from "./base-agent";
-import { GameState, Action } from "../sdk/types";
-import { encodeModifyLiquidity, encodeSwapExactInSingle } from "../sdk/router";
-import { OPCODES } from "../sdk/opcodes";
-import { BountyClient, createBounty, getRoundBounties } from "../sdk/bounty";
-import { HACKATHON_POOL } from "../sdk/index";
-import type { BountyCondition } from "../sdk/types";
+import { BaseAgent } from './base-agent.js';
+import { GameState, Action } from '../sdk/types.js';
+import { encodeModifyLiquidity, encodeSwapExactInSingle } from '../sdk/router.js';
+import { OPCODES } from '../sdk/opcodes.js';
+import { BountyClient, createBounty, getRoundBounties } from '../sdk/bounty.js';
+import { HACKATHON_POOL } from '../sdk/index.js';
+import type { BountyCondition } from '../sdk/types.js';
 
 /// Earnings breakdown: fee vs interest split
 export interface EarningsBreakdown {

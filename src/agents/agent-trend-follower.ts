@@ -11,23 +11,23 @@
 
 import { Signer } from "ethers";
 import { ethers } from "ethers";
-import { BaseAgent } from "./base-agent";
-import { GameState, Action } from "../sdk/types";
+import { BaseAgent } from './base-agent.js';
+import { GameState, Action } from '../sdk/types.js';
 import {
   encodeSwapExactInSingle,
   encodePMTake,
   ModifyDebtParams,
-} from "../sdk/router";
-import { submitBorrowFlow } from "../sdk/borrow-flow";
-import { OPCODES } from "../sdk/opcodes";
+} from '../sdk/router.js';
+import { submitBorrowFlow } from '../sdk/borrow-flow.js';
+import { OPCODES } from '../sdk/opcodes.js';
 import {
   BountyClient,
   getRoundBounties,
   getBounty,
   claimBounty,
-} from "../sdk/bounty";
-import type { BountyCondition, BountyRecord } from "../sdk/types";
-import { MarketClient } from "../sdk/market";
+} from '../sdk/bounty.js';
+import type { BountyCondition, BountyRecord } from '../sdk/types.js';
+import { MarketClient } from '../sdk/market.js';
 
 export class AgentTrendFollower extends BaseAgent {
   private trendWindow = 5; // Check 5-block moving average

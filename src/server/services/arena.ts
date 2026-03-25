@@ -4,7 +4,7 @@ import {
   AegisVaultValidator,
   CHAIN_CONFIG,
   KNOWN_ADDRESSES,
-} from "../../sdk/index";
+} from '../../sdk/index.js';
 
 export interface ArenaServiceConfig {
   arenaAddress: string;

@@ -10,8 +10,8 @@ import type {
   FinalScores,
   RoundState,
   VaultValidationResult,
-} from "./types";
-import { AegisVaultValidator } from "./vault-validator";
+} from './types.js';
+import { AegisVaultValidator } from './vault-validator.js';
 
 const ARENA_ABI = [
   "event RoundRegistered(uint256 indexed roundId, address[] agents)",

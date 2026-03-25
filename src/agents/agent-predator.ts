@@ -10,17 +10,17 @@
 
 import { Signer } from "ethers";
 import { ethers } from "ethers";
-import { BaseAgent } from "./base-agent";
-import { GameState, Action } from "../sdk/types";
-import { encodeModifyLiquidity } from "../sdk/router";
-import { OPCODES } from "../sdk/opcodes";
+import { BaseAgent } from './base-agent.js';
+import { GameState, Action } from '../sdk/types.js';
+import { encodeModifyLiquidity } from '../sdk/router.js';
+import { OPCODES } from '../sdk/opcodes.js';
 import {
   BountyClient,
   getRoundBounties,
   getBounty,
   claimBounty,
-} from "../sdk/bounty";
-import type { BountyCondition, BountyRecord } from "../sdk/types";
+} from '../sdk/bounty.js';
+import type { BountyCondition, BountyRecord } from '../sdk/types.js';
 
 export class AgentPredator extends BaseAgent {
   private bountyClient: BountyClient | null = null;

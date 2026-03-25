@@ -28,16 +28,18 @@ We deployed three AI agents — a **PassiveLP**, a **TrendFollower**, and a **Pr
 
 ---
 
-## 📊 Live Status: Competition Underway
+## 📊 Live Status: Competition Active (CP-021 Deployed)
 
-| Agent | Strategy | Status | Capital |
-|---|---|---|---|
-| 🟢 **PassiveLP** | Full-range LP, 0% leverage | **✅ LIVE** — earning fees + interest | 5.15 OKB + 441 USD₮0 |
-| 🟡 **TrendFollower** | Momentum + leverage | **✅ LIVE** — vault active, trading | 0.152 OKB + 786 USD₮0 |
-| 🔵 **Predator** | Delta-neutral spread harvester | **✅ LIVE** — earning spread every block | 9.51 OKB + 27 USD₮0 |
+**Control-plane deployed on 2026-03-25. All three agents registered with vault IDs. Server health: ✅ HEALTHY.**
 
-**[📈 View PassiveLP position →](./PASSIVE_LP_POSITION.md)**  
-**[🎮 Full game status & TXs →](./GAME_STATUS.md)**  
+| Agent | Strategy | Status | Vault ID | Registration TX |
+|---|---|---|---|---|
+| 🟢 **PassiveLP** | Full-range LP, 0% leverage | **✅ LIVE** — earning fees + interest | 2 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
+| 🟡 **TrendFollower** | Momentum + leverage | **✅ LIVE** — vault active, trading | 4 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
+| 🔵 **Predator** | Delta-neutral spread harvester | **✅ LIVE** — earning spread every block | 5 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
+
+**[📈 View CP-021 Audit →](/../../talos-runtime/state/builds/CP-021/audit.md)**  
+**[📋 Control-plane Evidence →](/../../talos-runtime/state/builds/CP-021/evidence/)**  
 **[👤 Meet the agents →](./AGENTS.md)**
 
 ---
@@ -107,13 +109,14 @@ npm run deploy
 
 ## 🔍 For Judges — On-Chain Verification
 
-**[👉 START HERE: Current Game Status](./GAME_STATUS.md)** — see all verified TX hashes, agent registration, and live LP position at a glance.
+### Start Here: CP-021 Deployment Audit
+**[👉 CP-021 Formal Audit & Closeout](../../talos-runtime/state/builds/CP-021/audit.md)** — Complete evidence trail, on-chain contract addresses, registration TXs, and deployment verification.
 
 Everything in AEGIS Arena is verifiable on X Layer mainnet. Judges can validate:
 
-### 1. **Live Contracts**
-- **Arena.sol:** [`0x1e27EE1aa171845CE2523a867Fc5114318916d61`](https://www.okx.com/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61) (✅ deployed, 6448 bytes)
-- **Bounty.sol:** [`0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816`](https://www.okx.com/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816) (✅ deployed, 5116 bytes)
+### 1. **Live Contracts (CP-021)**
+- **Arena.sol:** [`0x77189D65156fC82C422F73Ed3c63F4e5F2c00bBA`](https://www.okx.com/web3/explorer/xlayer/address/0x77189D65156fC82C422F73Ed3c63F4e5F2c00bBA) — ✅ **ACTIVE** (deployed 2026-03-25T21:13:51Z)
+- **Bounty.sol:** [`0xf3C8c2eac069E44030A36C6D15F1009dF882Be75`](https://www.okx.com/web3/explorer/xlayer/address/0xf3C8c2eac069E44030A36C6D15F1009dF882Be75) — ✅ **ACTIVE** (deployed 2026-03-25T21:13:58Z)
 
 ### 2. **Passive-LP Position (Active)**
 - **Deposit TX:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95) ✅ **SUCCESS**
@@ -203,11 +206,17 @@ Uniswap v4 (X Layer)
 | **USD₮0** | `0x779Ded0c9e1022225f8E0630b35a9b54bE713736` |
 | **Pool (OKB/USD₮0, AegisHook)** | `0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4` |
 
-### Arena Contracts
-| Contract | Address | Explorer |
-|----------|---------|---------|
-| **Arena.sol** | `0x1e27EE1aa171845CE2523a867Fc5114318916d61` | [View](https://www.okx.com/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61) |
-| **Bounty.sol** | `0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816` | [View](https://www.okx.com/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816) |
+### Arena Contracts (CP-021 Deployment — ACTIVE)
+| Contract | Address | Explorer | Status |
+|----------|---------|---------|--------|
+| **Arena.sol** | `0x77189D65156fC82C422F73Ed3c63F4e5F2c00bBA` | [View](https://www.okx.com/web3/explorer/xlayer/address/0x77189D65156fC82C422F73Ed3c63F4e5F2c00bBA) | ✅ Active (deployed 2026-03-25) |
+| **Bounty.sol** | `0xf3C8c2eac069E44030A36C6D15F1009dF882Be75` | [View](https://www.okx.com/web3/explorer/xlayer/address/0xf3C8c2eac069E44030A36C6D15F1009dF882Be75) | ✅ Active (deployed 2026-03-25) |
+
+**Previous Contracts (Deactivated):**
+| Contract | Address |
+|----------|---------|
+| Arena.sol | `0x1e27EE1aa171845CE2523a867Fc5114318916d61` |
+| Bounty.sol | `0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816` |
 
 ---
 

@@ -7,7 +7,7 @@ import {
   BountyRecord,
   CreateBountyParams,
   ClaimBountyResult,
-} from "./types";
+} from './types.js';
 
 // ================================================================
 // Bounty Contract ABI (minimal, for MVP)

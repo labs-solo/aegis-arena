@@ -1,8 +1,8 @@
 /// AEGIS Router Calldata Encoding
 
 import { AbiCoder } from "ethers";
-import { Action, ActionParam } from "./types";
-import { OPCODES, isValidOpcode } from "./opcodes";
+import { Action, ActionParam } from './types.js';
+import { OPCODES, isValidOpcode } from './opcodes.js';
 
 const abiCoder = AbiCoder.defaultAbiCoder();
 export const ARENA_EXECUTION_METADATA_TAG = 0xfe;

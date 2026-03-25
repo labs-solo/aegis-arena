@@ -1,68 +1,32 @@
 {
-  "network": "xlayer",
-  "chainId": 196,
-  "rpc": "https://rpc.xlayer.tech",
-  "deployed": true,
-  "comment": "Arena/Bounty default owner is the deployer unless ownership is explicitly transferred later.",
-  "uniswapV4": {
-    "PoolManager": "0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32",
-    "Permit2": "0x000000000022D473030F116dDEE9F6B43aC78BA3",
-    "UniversalRouter": "0x35029f7AD06B7d62C4511239d65CEbF0f1124338"
-  },
-  "aegisEngine": {
-    "AegisEngine": "0x1b0ed1d21b5AB3Db311C1aC386DC874081914935",
-    "AegisHook": "0xc54aC33a60BeED0c10C32D8E4434166AF68550cc",
-    "AegisRouterV1": "0xb2830032E19A85e03cDE678FF93Da659C90CAFe5",
-    "AegisStateView": "0xE962612Dc9dcC3a7666F5Fa6B014b3b1D9287D27",
-    "VaultRegistry": "0xe19414e5C3DB1596f583d18d3Ac5bb43CBabc50D",
-    "OracleManager": "0x355dAd86872DE8248538E487Ef8898e0a4E31f70",
-    "LimitOrderManager": "0xCc7F9dC1C6BA855E2507c9C65910B48A7F6497C1",
-    "DynamicFeeManager": "0xA5571554A47deDEb667f91d60ADCb645a2Ef1780",
-    "VariableInterestRate": "0xCCDECda074d8411651AC1B8FD87c5CA7551f28F6",
-    "PositionManager": "0xcF1EAFC6928dC385A342E7C6491d371d2871458b"
-  },
-  "tokens": {
-    "WOKB": "0xe538905cf8410324e03A5A23C1c177a474D59b2b",
-    "USDC": "0x74b7f16337b8972027f6196a17a631ac6de26d22",
-    "UDSC": "0x779Ded0c9e1022225f8E0630b35a9b54bE713736"
-  },
   "arena": {
-    "ArenaAddress": "0x1e27EE1aa171845CE2523a867Fc5114318916d61",
-    "Bounty": "0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816",
-    "ArenaDeployTx": "0xd95991873a4d8713e14b8b188a9abdb3911a89710ddfbb735152e88556d06ad7",
-    "BountyDeployTx": "0x3921546eb3535291d6cd9892132f69dc48e91938c592c8f64e1dbf9a69ee454d",
-    "deployedAt": "2026-03-24",
+    "address": "0x77189D65156fC82C422F73Ed3c63F4e5F2c00bBA",
     "deployedBy": "0x71632aA7C30D6A1644e5Db13d245bd195A08b70b",
-    "registrationTx": "0x9e8536b58be5034ae2254e2543558794f6b8721c141d9675863af1db56709d25",
-    "registrationBlock": 55635031,
-    "registeredAgents": [
-      "0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02",
-      "0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1",
-      "0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D"
-    ]
+    "deploymentTx": "0xa0519b2744f4a277b768bb0b77ea4701a8973271840c597df2bb6e43ff058197"
   },
-  "pools": {
-    "USDC_WOKB": {
-      "id": "0x9072107b33ad70c231602b537d91774a43c1837f9b28040ee9bf8cad0a0ab4a1",
-      "fee": 500,
-      "token0": "USDC",
-      "token1": "WOKB",
-      "decimals0": 6,
-      "decimals1": 18
+  "bounty": {
+    "address": "0xf3C8c2eac069E44030A36C6D15F1009dF882Be75",
+    "deployedBy": "0x71632aA7C30D6A1644e5Db13d245bd195A08b70b",
+    "deploymentTx": "0x393487e12f8762d577820597338d2517b86cfa57a577a26d96744e044c4dd0fa"
+  },
+  "agents": {
+    "passiveLp": {
+      "address": "0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02",
+      "vaultId": 2
     },
-    "hackathonPrimaryMarket": {
-      "id": "0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4",
-      "name": "OKB / USD\u20ae0",
-      "token0": "0x0000000000000000000000000000000000000000",
-      "token0Name": "OKB",
-      "token1": "0x779Ded0c9e1022225f8E0630b35a9b54bE713736",
-      "token1Name": "USD\u20ae0",
-      "token1Decimals": 6,
-      "chainId": 196,
-      "hook": "0xc54aC33a60BeED0c10C32D8E4434166AF68550cc",
-      "hookName": "AEGIS Hook",
-      "description": "OKB/USD\u20ae0 pool for AEGIS hackathon competition on X Layer",
-      "uniswapExplorer": "https://app.uniswap.org/explore/pools/xlayer/0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4"
+    "trendFollower": {
+      "address": "0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1",
+      "vaultId": 4
+    },
+    "predator": {
+      "address": "0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D",
+      "vaultId": 5
     }
+  },
+  "executionSurfaces": {
+    "aegisRouter": "0xb2830032E19A85e03cDE678FF93Da659C90CAFe5",
+    "positionManager": "0xcF1EAFC6928dC385A342E7C6491d371d2871458b",
+    "limitOrderManager": "0xCc7F9dC1C6BA855E2507c9C65910B48A7F6497C1",
+    "stateView": "0xE962612Dc9dcC3a7666F5Fa6B014b3b1D9287D27"
   }
 }

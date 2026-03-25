@@ -8,13 +8,13 @@
 /// This pattern ensures PositionManager only has vault access during
 /// the critical debt-modification operation.
 
-import { BorrowFlowInput, BorrowFlowOutput } from "./types";
+import { BorrowFlowInput, BorrowFlowOutput } from './types.js';
 import {
   encodeUnlockVault,
   encodeLockVault,
   encodeModifyDebt,
   ModifyDebtParams,
-} from "./router";
+} from './router.js';
 
 /// @notice Encode borrow flow into 3 batches
 /// @param input Borrow parameters (vaultId, principalDelta, etc.)

@@ -54,8 +54,8 @@ async function compileAndDeploy() {
   // Otherwise, we'll need the user to build the contracts manually
   
   console.log('\n[2/6] Checking if contracts are compiled...');
-  const arenaArtifact = path.join(process.cwd(), 'contracts/out', 'Arena.sol', 'Arena.json');
-  const bountyArtifact = path.join(process.cwd(), 'contracts/out', 'Bounty.sol', 'Bounty.json');
+  const arenaArtifact = path.join(process.cwd(), 'out', 'Arena.sol', 'Arena.json');
+  const bountyArtifact = path.join(process.cwd(), 'out', 'Bounty.sol', 'Bounty.json');
   
   if (!fs.existsSync(arenaArtifact) || !fs.existsSync(bountyArtifact)) {
     console.error('❌ Compiled artifacts not found.');

@@ -1,8 +1,8 @@
 /// Base class for all AEGIS Arena agents
 
 import { Contract, Interface, Signer } from "ethers";
-import { GameState, Action, SimulationResult, AgentVaultBindingReader } from "../sdk/types";
-import { GatewayClient } from "../sdk/gateway";
+import { GameState, Action, SimulationResult, AgentVaultBindingReader } from '../sdk/types.js';
+import { GatewayClient } from '../sdk/gateway.js';
 
 const arenaInterface = new Interface([
   "function executeBatch(uint256 roundId, address agent, bytes[] actions)",

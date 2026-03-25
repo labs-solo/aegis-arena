@@ -5,8 +5,8 @@
 
 import { Router, Request, Response } from "express";
 import { ethers } from "ethers";
-import { createArenaClientFromConfig, createArenaServiceConfigFromEnv } from "../services/arena";
-import { encodeArenaExecutionMetadata } from "../../sdk/router";
+import { createArenaClientFromConfig, createArenaServiceConfigFromEnv } from '../services/arena.js';
+import { encodeArenaExecutionMetadata } from '../../sdk/router.js';
 
 const router = Router();
 

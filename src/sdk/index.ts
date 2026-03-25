@@ -1,31 +1,31 @@
 /// AEGIS Arena SDK Main Export
 
 // Types
-export * from "./types";
+export * from './types.js';
 
 // Opcodes
-export * from "./opcodes";
+export * from './opcodes.js';
 
 // Router encoding
-export * from "./router";
+export * from './router.js';
 
 // Arena registration and bindings
-export * from "./arena";
+export * from './arena.js';
 
 // Vault validation
-export * from "./vault-validator";
+export * from './vault-validator.js';
 
 // Borrow flow (3-batch pattern)
-export * from "./borrow-flow";
+export * from './borrow-flow.js';
 
 // Bounty SDK (CP-013)
-export * from "./bounty";
+export * from './bounty.js';
 
 // Gateway SDK (CP-014)
-export * from "./gateway";
+export * from './gateway.js';
 
 // Market Data SDK (CP-015 OKX Market API)
-export { MarketClient } from "./market";
+export { MarketClient } from './market.js';
 
 // Configuration
 export const KNOWN_ADDRESSES = {

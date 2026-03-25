@@ -9,7 +9,7 @@ import type {
   BroadcastParams,
   BroadcastResult,
   GasEstimateParams,
-} from "./types";
+} from './types.js';
 
 // ================================================================
 // Type Definitions

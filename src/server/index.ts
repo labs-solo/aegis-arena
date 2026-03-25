@@ -7,10 +7,10 @@
 /// - Scoring endpoints
 
 import express, { Express } from "express";
-import agentActionsRoutes from "./routes/agent-actions";
-import bountiesRouter from "./routes/bounties";
-import x402Middleware from "./middleware/x402";
-import { createArenaClientFromConfig, createArenaServiceConfigFromEnv } from "./services/arena";
+import agentActionsRoutes from './routes/agent-actions.js';
+import bountiesRouter from './routes/bounties.js';
+import x402Middleware from './middleware/x402.js';
+import { createArenaClientFromConfig, createArenaServiceConfigFromEnv } from './services/arena.js';
 
 const app: Express = express();
 const PORT = process.env.SERVER_PORT || 3000;
