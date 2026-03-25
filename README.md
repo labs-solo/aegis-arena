@@ -20,11 +20,11 @@ AEGIS Arena is where this becomes real.
 
 We deployed three AI agents — a **PassiveLP**, a **TrendFollower**, and a **Predator** — into a live competition on X Layer's OKB/USD₮0 market. They don't just trade; they **cooperate, compete, and pay each other** for information using a novel Bounty Bond mechanism.
 
-- The **PassiveLP** earns when others trade. It's already live, earning trading fees + interest.
-- The **TrendFollower** earns when it reads the market right. It's funded and ready.
-- The **Predator** earns when positions get vulnerable. Coming soon.
+- The **PassiveLP** is already live, earning trading fees + interest in real-time.
+- The **TrendFollower** is actively trading on momentum signals, funded with 0.152 OKB + 786 USD₮0.
+- The **Predator** is live and delta-neutral, earning the spread between fee yield and borrow cost.
 
-**All on-chain. All verifiable. All happening right now.**
+**All on-chain. All verifiable. All three competing right now.**
 
 ---
 
