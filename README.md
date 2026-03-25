@@ -2,6 +2,32 @@
 
 > **AI agents. Real money. Live on X Layer.**
 
+## 🔍 Quick Verification (for Judges)
+
+**Live on X Layer (Chain 196):**
+- **Arena:** [`0x77189D65156fC82C422F73Ed3c63F4e5F2c00bBA`](https://www.okx.com/web3/explorer/xlayer/address/0x77189D65156fC82C422F73Ed3c63F4e5F2c00bBA)
+- **Bounty:** [`0xf3C8c2eac069E44030A36C6D15F1009dF882Be75`](https://www.okx.com/web3/explorer/xlayer/address/0xf3C8c2eac069E44030A36C6D15F1009dF882Be75)
+
+**Verify agent state:**
+```bash
+# Get PassiveLP vault balance
+cast call 0x1b0ed1d21b5AB3Db311C1aC386DC874081914935 \
+  "vaults(address)(uint256,uint256,uint256)" \
+  0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02 \
+  --rpc-url https://rpc.xlayer.tech
+
+# View live game state
+curl http://localhost:3000/api/game/state/1
+```
+
+**Agent Execution Proof:**
+- [PassiveLP execution TX](https://www.okx.com/web3/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)
+- [Agent registration TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91)
+
+**More Details:** [CP-021 Formal Audit & Evidence →](../../talos-runtime/state/builds/CP-021/audit.md)
+
+---
+
 ## The Problem DeFi Never Solved
 
 Most liquidity provision loses money. Impermanent loss, cascading liquidations, and static fee models bleed LPs even when markets are trending sideways.
@@ -18,13 +44,13 @@ What if LPs didn't need to be victims? What if **the LP is smarter than the trad
 
 AEGIS Arena is where this becomes real.
 
-We deployed three AI agents — a **PassiveLP**, a **TrendFollower**, and a **Predator** — into a live competition on X Layer's OKB/USD₮0 market. They don't just trade; they **cooperate, compete, and pay each other** for information using a novel Bounty Bond mechanism.
+We deployed three AI agents — a **PassiveLP**, a **TrendFollower**, and a **Predator** — into a live competition on X Layer's OKB/USD₮0 market. They are registered, funded, and ready to execute. They **cooperate, compete, and pay each other** for information using a novel Bounty Bond mechanism.
 
-- The **PassiveLP** is already live, earning trading fees + interest in real-time.
-- The **TrendFollower** is actively trading on momentum signals, funded with 0.152 OKB + 786 USD₮0.
-- The **Predator** is live and delta-neutral, earning the spread between fee yield and borrow cost.
+- **PassiveLP** is registered with Vault 2 and has completed its first execution (5.15 OKB + 441 USD₮0 deployed).
+- **TrendFollower** is registered with Vault 4 (0.152 OKB + 786 USD₮0 available).
+- **Predator** is registered with Vault 5 and ready for execution.
 
-**All on-chain. All verifiable. All three competing right now.**
+**All on-chain. All verifiable. All three registered and funded.**
 
 ---
 
@@ -34,9 +60,9 @@ We deployed three AI agents — a **PassiveLP**, a **TrendFollower**, and a **Pr
 
 | Agent | Strategy | Status | Vault ID | Registration TX |
 |---|---|---|---|---|
-| 🟢 **PassiveLP** | Full-range LP, 0% leverage | **✅ LIVE** — earning fees + interest | 2 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
-| 🟡 **TrendFollower** | Momentum + leverage | **✅ LIVE** — vault active, trading | 4 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
-| 🔵 **Predator** | Delta-neutral spread harvester | **✅ LIVE** — earning spread every block | 5 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
+| 🟢 **PassiveLP** | Full-range LP, 0% leverage | ✅ **REGISTERED** — Vault 2, 1 execution completed | 2 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
+| 🟡 **TrendFollower** | Momentum + leverage | ✅ **REGISTERED** — Vault 4, SDK tap builders integrated | 4 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
+| 🔵 **Predator** | Delta-neutral spread harvester | ✅ **REGISTERED** — Vault 5, ready for execution | 5 | [View TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91) |
 
 **[📈 View CP-021 Audit →](/../../talos-runtime/state/builds/CP-021/audit.md)**  
 **[📋 Control-plane Evidence →](/../../talos-runtime/state/builds/CP-021/evidence/)**  
@@ -44,11 +70,27 @@ We deployed three AI agents — a **PassiveLP**, a **TrendFollower**, and a **Pr
 
 ---
 
-## Why This Matters
+## 🌐 OKX Integration Summary
 
-Most liquidity provision loses money. Impermanent loss, cascading liquidations, and static fee models bleed LPs even when markets are trending sideways. **AEGIS changes this at the protocol level** — and AEGIS Arena is where you prove it.
+AEGIS Arena is deeply integrated into the OKX ecosystem. Every component of agent execution touches OKX infrastructure:
 
-**AEGIS Engine is a Uniswap v4 hook that gives liquidity positions on-chain credit.** LPs don't just earn fees — they borrow against their positions, take directional bets, and earn even when prices move against them. The math that makes this safe is the same math that eliminates cascade liquidations entirely.
+| Component | OKX Integration | Purpose |
+|-----------|-----------------|---------|
+| **Deployment** | X Layer (Chain 196) | All contracts live on OKX's L2 — no bridging, no fragmentation |
+| **Market Data** | OKX Market API (K-lines) | TrendFollower reads live 5m candles for SMA(20)/SMA(50) trend detection |
+| **Quote Discovery** | OKX DEX API (aggregator) | TrendFollower fetches quotes from 500+ DEX sources for route optimization |
+| **Transaction Validation** | OKX Onchain Gateway | All agent actions simulated before broadcast — autonomous safety without human review |
+| **Gas Costs** | X Layer gas (~$0.00028/gas) | Full agent lifecycle: ~$2.27 per execution (PassiveLP deposit + borrow + swap) |
+
+**Why This Matters for Judges:**
+- **Single Ecosystem:** No cross-chain calls. Everything runs on X Layer.
+- **Production Grade:** Uses the same infrastructure OKX uses for enterprise DeFi.
+- **Autonomous Safety:** Agents validate their own actions via simulation.
+- **Cost Efficiency:** X Layer ultra-cheap gas enables frequent, aggressive trading.
+
+---
+
+## Why AEGIS Matters
 
 ### Why No Cascade Liquidations Matter
 
@@ -249,39 +291,39 @@ Three AI agents with radically different strategies are locked in live competiti
 ### 🛡️ PassiveLP — The Rent Collector
 > *"You're all trading. I'm collecting rent."*
 
-**The Strategy:** Passive full-range liquidity on OKB/USD₮0. Earns 0.05% swap fees regardless of market direction. Collects borrow interest when TrendFollower and Predator leverage. Already **LIVE** with 5.15 OKB + 441 USD₮0 deployed. [View deposit TX →](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)
+**The Strategy:** Passive full-range liquidity on OKB/USD₮0. Earns 0.05% swap fees regardless of market direction. Collects borrow interest when TrendFollower and Predator leverage. **Registered and funded** with 5.15 OKB + 441 USD₮0. [View deposit TX →](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)
 
 **The Edge:** Doesn't need to predict direction. Only needs volume. While other agents wrestle with timing, PassiveLP collects rent from every swap, every borrow, every trade.
 
 **The Bounty Play:** Posts volume bounties ("500k USD₮0 swaps = 50 USD₮0 reward"). TrendFollower executes trades it planned anyway and claims the bounty. PassiveLP pays 50 but earns 250 in fees. Net: +200. The bounty is a customer acquisition cost.
 
-**Status:** ✅ **LIVE** — [View position](./PASSIVE_LP_POSITION.md)
+**Status:** ✅ **REGISTERED** — Vault 2, 1 execution completed
 
 ---
 
 ### 📈 TrendFollower — The Momentum Reader
 > *"The market tells me where it's going. I just listen better than everyone else."*
 
-**The Strategy:** Reads live OKX K-line data, computes SMA(20)/SMA(50) crossovers, enters leveraged positions (2–3x via AEGIS) on signal, exits on reversal. Clocks reaction time in blocks. **LIVE** with 0.152 OKB + 786 USD₮0 deployed. [View deposit TX →](https://www.okx.com/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006)
+**The Strategy:** Reads live OKX K-line data, computes SMA(20)/SMA(50) crossovers, ready to enter leveraged positions (2–3x via AEGIS) on signal. **Registered and funded** with 0.152 OKB + 786 USD₮0. [View deposit TX →](https://www.okx.com/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006)
 
 **The Edge:** Speed + data. Fetches OKX K-lines 60+ times per minute (cached). Momentum signal crossing alert within 2 blocks. While other agents guess, TrendFollower *knows*.
 
 **The Bounty Play:** Doesn't create bounties; claims them. PassiveLP posts a volume bounty. TrendFollower's momentum signal is live. TrendFollower executes the same trades it would anyway, triggers the bounty, claims the reward. Free money on top of directional P&L. Also posts defensive bounties (pay for price stability) as leverage insurance.
 
-**Status:** ✅ **LIVE** — vault active, trading on momentum signals
+**Status:** ✅ **REGISTERED** — Vault 4, SDK tap builders integrated
 
 ---
 
 ### 🦅 Predator — The Spread Harvester
 > *"You're worried about direction. I'm above it."*
 
-**The Strategy:** Builds a delta-neutral position — long WOKB + LP USD₮0 on one side, short debt on the other. Net directional exposure: near zero. Earns the structural spread between fee yield and borrow cost unconditionally, every round.
+**The Strategy:** Builds a delta-neutral position — long WOKB + LP USD₮0 on one side, short debt on the other. Net directional exposure: near zero. Ready to execute across the full market cycle.
 
 **The Edge:** Fee income from the LP leg (~160 USD₮0/round) exceeds borrow cost on the debt leg (~30 USD₮0/round). Net: ~+130 USD₮0 per round regardless of price direction. Market up, down, sideways — Predator doesn't care.
 
 **The Bounty Play:** Posts price-range bounties as cheap insurance to protect its LP leg from impermanent loss. Also evaluates distressed bounties from over-leveraged agents — claims them only when the ROI clears the threshold for staying neutral.
 
-**Status:** ✅ **LIVE** — [Live leaderboard](./GAME_STATUS.md)
+**Status:** ✅ **REGISTERED** — Vault 5, ready for execution
 
 ---
 
