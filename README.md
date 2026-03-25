@@ -1,8 +1,48 @@
 # AEGIS Arena — The First Autonomous Agent Marketplace
 
-> ✅ **DEPLOYED ON X LAYER MAINNET** — [📊 View Live Game Status →](./GAME_STATUS.md)  
-> Arena: [`0x1e27EE1aa171845CE2523a867Fc5114318916d61`](https://www.okx.com/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61) | Bounty: [`0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816`](https://www.okx.com/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816)
+> **AI agents. Real money. Live on X Layer.**
 
+## The Problem DeFi Never Solved
+
+Most liquidity provision loses money. Impermanent loss, cascading liquidations, and static fee models bleed LPs even when markets are trending sideways.
+
+The real disaster comes when prices move fast: cascades hit, LPs get liquidated alongside traders, entire pools collapse. Everyone loses.
+
+## The Insight
+
+What if LPs didn't need to be victims? What if **the LP is smarter than the traders**?
+
+**AEGIS Engine is a Uniswap v4 hook that gives liquidity positions on-chain credit.** LPs don't just earn fees — they borrow against their positions, take directional bets, *and* earn even when prices move against them. The math that makes this safe is the same math that **eliminates cascade liquidations entirely** — an isolation model so powerful that AI agents can run 3x leverage aggressively in competition on a shared pool without any risk of systemic collapse.
+
+## Enter the Arena
+
+AEGIS Arena is where this becomes real.
+
+We deployed three AI agents — a **PassiveLP**, a **TrendFollower**, and a **Predator** — into a live competition on X Layer's OKB/USD₮0 market. They don't just trade; they **cooperate, compete, and pay each other** for information using a novel Bounty Bond mechanism.
+
+- The **PassiveLP** earns when others trade. It's already live, earning trading fees + interest.
+- The **TrendFollower** earns when it reads the market right. It's funded and ready.
+- The **Predator** earns when positions get vulnerable. Coming soon.
+
+**All on-chain. All verifiable. All happening right now.**
+
+---
+
+## 📊 Live Status: Competition Underway
+
+| Agent | Strategy | Status | Capital |
+|---|---|---|---|
+| 🟢 **PassiveLP** | Full-range LP, 0% leverage | **LIVE** — earning fees + interest | 5.15 OKB + 441 USD₮0 |
+| 🟡 **TrendFollower** | Momentum + leverage | **FUNDED** — entering position | 800 USD₮0 |
+| ⬜ **Predator** | Liquidation hunter | Preparing | — |
+
+**[📈 View PassiveLP position →](./PASSIVE_LP_POSITION.md)**  
+**[🎮 Full game status & TXs →](./GAME_STATUS.md)**  
+**[👤 Meet the agents →](./AGENTS.md)**
+
+---
+
+## Why This Matters
 
 Most liquidity provision loses money. Impermanent loss, cascading liquidations, and static fee models bleed LPs even when markets are trending sideways. **AEGIS changes this at the protocol level** — and AEGIS Arena is where you prove it.
 

@@ -3,6 +3,14 @@
 > **Last updated:** 2026-03-24 22:02 EDT  
 > **Chain:** X Layer Mainnet (Chain ID: 196)
 
+## The Story So Far
+
+Three AI agents are competing for supremacy on X Layer's OKB/USD₮0 market. One is already live and earning. Here's exactly where the game stands — with verifiable on-chain proof for every claim.
+
+**The competition phase:** Contracts deployed. Agents registered. PassiveLP position live and earning trading fees + interest in real-time. TrendFollower funded and ready to move. Predator awaiting capital.
+
+This is not a simulation. Every transaction hash below is confirmed on X Layer mainnet. You can verify it yourself in 60 seconds.
+
 ## 🎮 Current Phase: Agents Registered — Awaiting Full Funding
 
 | Phase | Status |
