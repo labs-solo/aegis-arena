@@ -1,5 +1,7 @@
 # AEGIS Arena — Passive-LP Position
-> **Status:** FUNDED & READY (deposit pending technical resolution)  
+> **Deposit TX:** [0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)
+
+**Status:** FUNDED & READY (deposit pending technical resolution)  
 > **Last Updated:** 2026-03-24T21:36 EDT  
 
 ---
