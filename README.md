@@ -227,38 +227,90 @@ Uniswap v4 (X Layer)
 
 This pool is the **primary market for the AEGIS hackathon competition**. All three agents (PassiveLP, TrendFollower, Predator) trade and provide liquidity on this pool to earn swap fees and bounty rewards.
 
-## Agent Strategies
+## 🎭 The Three Agents (A Competition in Personalities)
 
-### 1. **PassiveLP** (Conservative)
-- Provides liquidity to USDC/WOKB pool
-- Earns swap fees with minimal leverage
-- Low risk, consistent but modest returns
+Three AI agents with radically different strategies are locked in live competition on X Layer's OKB/USD₮0 market. Each has a distinct personality, edge, and Bounty Bond strategy. Judges don't just see traders—they see competitors who cooperate, agents who hire each other, and a game theory that actually makes sense.
 
-### 1. **PassiveLP** (Conservative)
-- **Strategy:** Provide full-range liquidity on USDC/WOKB pool (0% leverage)
-- **Capital Allocation:** 50% deployed as LP, 50% held as idle USDC buffer
-- **Income Streams:**
-  1. **Trading Fees** (Primary) — 0.05% fee on all swap volume; full-range position captures 100% of pool volume
-  2. **Borrow Interest** (Secondary) — Accrued when TrendFollower/Predator borrow against their positions
-- **Risk Profile:** Zero liquidation risk (no debt); vulnerable to impermanent loss (mitigated by fee income)
-- **Scoring:** Final score = idle USDC + (LP shares × current share price)
-  - Share price appreciation = accumulated fees / total shares
-  - At settlement, judges can verify: `final_score ≥ initial_capital × 1.10` (10% return target)
-- **Bounty Strategy (CP-013):** Creates bounties from idle USDC to attract TrendFollower/Predator volume; bounty ROI is optimized using OKX Market API volume estimates
-- **Expected Return:** 5-30% depending on trading volume (fee yield = volume × 0.05%)
+### 🛡️ PassiveLP — The Rent Collector
+> *"You're all trading. I'm collecting rent."*
 
-### 2. **TrendFollower** (Aggressive)
-- Detects price trends and takes directional leveraged bets
-- Borrows capital via AEGIS (up to 3x leverage via sqrt(K) solvency)
-- Places limit orders to close positions profitably
-- High risk but liquidation-free (AEGIS guarantee)
+**The Strategy:** Passive full-range liquidity on OKB/USD₮0. Earns 0.05% swap fees regardless of market direction. Collects borrow interest when TrendFollower and Predator leverage. Already **LIVE** with 5.15 OKB + 441 USD₮0 deployed.
 
-### 3. **Predator** (Market-Neutral)
-- Balanced long/short positions (delta-neutral)
-- Profits from volatility and fee collection
-- Medium leverage; stable returns independent of direction
+**The Edge:** Doesn't need to predict direction. Only needs volume. While other agents wrestle with timing, PassiveLP collects rent from every swap, every borrow, every trade.
 
-See [`docs/specs/AGENTS.md`](docs/specs/AGENTS.md) for complete strategy specifications.
+**The Bounty Play:** Posts volume bounties ("500k USD₮0 swaps = 50 USD₮0 reward"). TrendFollower executes trades it planned anyway and claims the bounty. PassiveLP pays 50 but earns 250 in fees. Net: +200. The bounty is a customer acquisition cost.
+
+**Status:** ✅ **LIVE** — [View position](./PASSIVE_LP_POSITION.md)
+
+---
+
+### 📈 TrendFollower — The Momentum Reader
+> *"The market tells me where it's going. I just listen better than everyone else."*
+
+**The Strategy:** Reads live OKX K-line data, computes SMA(20)/SMA(50) crossovers, enters leveraged positions (2–3x via AEGIS) on signal, exits on reversal. Clocks reaction time in blocks. **FUNDED** with 0.17 OKB + 800 USD₮0, position pending.
+
+**The Edge:** Speed + data. Fetches OKX K-lines 60+ times per minute (cached). Momentum signal crossing alert within 2 blocks. While other agents guess, TrendFollower *knows*.
+
+**The Bounty Play:** Doesn't create bounties; claims them. PassiveLP posts a volume bounty. TrendFollower's momentum signal is live. TrendFollower executes the same trades it would anyway, triggers the bounty, claims the reward. Free money on top of directional P&L. Also posts defensive bounties (pay for price stability) as leverage insurance.
+
+**Status:** ⏳ **FUNDED** — [See troubleshooting](./GAME_STATUS.md)
+
+---
+
+### 🦅 Predator — The Liquidation Opportunist
+> *"I don't need the market to move. I need you to be overleveraged."*
+
+**The Strategy:** Stays delta-neutral (long and short equal). Monitors all vaults for LTV creep. Identifies positions approaching liquidation. Posts rescue bounties, evaluates payoff (rescue bounty vs. peeling reward), executes accordingly.
+
+**The Edge:** Asymmetric payoff. AEGIS isolation solvency means peeling is *safe*—one agent's partial liquidation doesn't cascade into others. Predator profits from chaos without systemic risk.
+
+**The Bounty Play:** Creates price-range bounties ("stabilize price ±2% = 50 USD₮0"). When desperate agents post rescue bounties, Predator evaluates: cheaper to rescue and claim bounty, or liquidate for bigger spread? If rescue > liquidation payoff, rescue. Otherwise, trigger the peel and pocket the collateral.
+
+**Status:** ⏳ **PREPARING** — [Live leaderboard](./GAME_STATUS.md)
+
+---
+
+### Why This Game Matters
+
+Traditional agent games are zero-sum. AEGIS Arena is *cooperative*. Agents hire each other via Bounty Bonds. PassiveLP creates incentives for TrendFollower to trade (and earns fees on those trades). TrendFollower claims the bounty (and makes directional profit). Predator waits for overleveraged positions (and earns peeling rewards when agents take too much risk).
+
+**The system is gamed by cooperation, not competition.**
+
+See [**AGENTS.md**](./AGENTS.md) for full personality profiles, real-time status, and Bounty Bond mechanics.
+
+---
+
+## ⚡ The Bounty Bond Ecosystem
+
+**Bounty Bonds are how agents pay each other to play their game.** One agent creates economic incentives for another to generate provable behavior. This flips the script on traditional DeFi competitions—cooperation becomes profitable.
+
+### How It Works
+
+1. **Create** — An agent deposits reward tokens (USD₮0) into `Bounty.sol` with conditions attached (volume threshold, price range, block window)
+2. **Claim** — Any agent that meets the conditions can submit a claim (proving on-chain activity)
+3. **Verify** — Server calls `Arena.getSnapshots()` to validate conditions; transfers reward from escrow to claimer
+4. **Settle** — Final scores include bounty rewards; judges see agent coordination in action
+
+### The Economic Flywheel
+
+- **PassiveLP posts bounties** → "Trade 500k USD₮0, earn 50 USD₮0" → Attracts TrendFollower volume
+- **TrendFollower already trades** → Bounty is free money on top of directional P&L → Claims it
+- **PassiveLP earns more fees** → Paid 50 for 500k volume → Earned 250 in swap fees → Net +200
+- **Predator monitors bounties** → Sees distressed positions posting rescue bounties → Decides: rescue for the bounty, or liquidate for the bigger payoff?
+
+**Every swap, borrow, and bounty claim is on-chain and verifiable.** Judges see not just trading, but *cooperation* — agents forming coalitions, paying each other for services, executing sophisticated multi-agent strategy.
+
+### Technical Details
+
+- **Smart Contract:** [`contracts/Bounty.sol`](contracts/Bounty.sol) — lifecycle, escrow, condition verification
+- **Arena Integration:** `Arena.getSnapshots()` — attests to volume, price, block window
+- **SDK:** [`src/sdk/bounty.ts`](src/sdk/bounty.ts) — agent methods (createBounty, claimBounty)
+- **Server:** [`src/server/routes/bounties.ts`](src/server/routes/bounties.ts) — verification endpoint
+- **Specification:** [**BOUNTY_BONDS.md**](docs/specs/BOUNTY_BONDS.md)
+
+**View live bounties:** [GAME_STATUS.md](./GAME_STATUS.md)
+
+---
 
 ### PassiveLP Deep Dive: Dual Income Streams
 
