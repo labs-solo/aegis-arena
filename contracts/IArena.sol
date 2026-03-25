@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 /// @title IArena
 /// @notice Interface for AEGIS Arena game contract
-/// @dev CP-017: Added getSnapshots(uint256, address) and getSnapshotTimestamps(uint256, address)
-///      for on-chain bounty verification. CP-018 implements these in Arena.sol.
+/// @dev CP-017: Added getSnapshots/getSnapshotTimestamps for on-chain bounty verification.
+///      CP-018: Added fundPrize, setRelayer, RelayerUpdated, PrizeFunded.
 interface IArena {
     // ================================================================
     // Events
@@ -30,6 +30,12 @@ interface IArena {
     /// @notice Emitted when agent actions are executed
     event ActionsExecuted(uint256 indexed roundId, address agent, bytes[] actions);
 
+    /// @notice Emitted when a relayer is authorized or deauthorized (CP-018)
+    event RelayerUpdated(address indexed relayer, bool authorized);
+
+    /// @notice Emitted when a prize pool is funded for a round (CP-018)
+    event PrizeFunded(uint256 indexed roundId, uint256 amount, uint256 totalPool);
+
     // ================================================================
     // Core Game Functions
     // ================================================================
@@ -44,16 +50,16 @@ interface IArena {
     /// @param durationSeconds Duration of the round in seconds
     function startRound(uint256 roundId, uint256 durationSeconds) external;
 
-    /// @notice Execute batch of agent actions (encoded for AEGIS Router)
+    /// @notice Execute batch of agent actions (authenticated relayer only — CP-018 ARCH-02)
     /// @param roundId The active round
     /// @param agent The agent address executing actions
     /// @param actions Array of encoded action bytes
     function executeBatch(uint256 roundId, address agent, bytes[] calldata actions) external;
 
-    /// @notice Settle a round: compute final scores and distribute prizes
+    /// @notice Settle a round: compute final scores and distribute prizes via ERC-20 transfer
     /// @param roundId The round to settle
-    /// @return winners Ranked winners (1st, 2nd, 3rd)
-    /// @return prizes Prize amounts in USDC
+    /// @return winners Agent addresses in registration order
+    /// @return prizes Prize amounts in prizeToken decimals
     function settle(uint256 roundId)
         external
         returns (address[] memory winners, uint256[] memory prizes);
@@ -81,10 +87,11 @@ interface IArena {
         );
 
     /// @notice Get final scores and prizes for a settled round
+    /// @dev CP-018: prizes are read from persisted roundPrizes mapping (real values)
     /// @param roundId The round ID
-    /// @return agentsRanked Agents sorted by score (highest first)
-    /// @return scores Final portfolio values in USDC
-    /// @return prizes Prize allocations in USDC
+    /// @return agentsRanked Agents in registration order
+    /// @return scores Action counts (activity score proxy)
+    /// @return prizes Real prize allocations from settle() in prizeToken decimals
     function getFinalScores(uint256 roundId)
         external
         view
@@ -109,16 +116,15 @@ interface IArena {
     // Snapshot Functions (CP-017 / CP-018)
     // ================================================================
 
-    /// @notice Returns trading performance snapshots for a given agent and round.
-    /// @dev Called by Bounty.verifyAndPay() for on-chain condition validation (HIGH-01 fix).
-    ///      CP-018 is responsible for the Arena.sol implementation with real accumulation.
-    ///      Return values are used by Bounty.sol to validate volume and price conditions.
+    /// @notice Returns accumulated activity snapshot for an agent in a round
+    /// @dev Called by Bounty.sol (CP-017) verifyAndPay(). Signature locked by CP-017 APPROVED.
+    ///      CP-018 implements real accumulation (not mock). Return type: 4-tuple of uint256.
     /// @param roundId The Arena round identifier.
     /// @param agentAddress The agent whose performance is queried.
-    /// @return totalVolumeUsdc Cumulative USDC volume traded by the agent in the round.
-    /// @return avgSqrtPriceX96 Time-weighted average sqrt price (X96 format) of agent trades.
-    /// @return startBlock Block number at which the round started.
-    /// @return endBlock Block number at which the round ended (0 if still active).
+    /// @return totalVolumeUsdc Accumulated volume proxy (actionCount * 1e6)
+    /// @return avgSqrtPriceX96 Average sqrt price X96 (0 for MVP — no price oracle)
+    /// @return startBlock Block number of first executeBatch() call
+    /// @return endBlock Block number of most recent executeBatch() call
     function getSnapshots(uint256 roundId, address agentAddress)
         external
         view
@@ -129,15 +135,34 @@ interface IArena {
             uint256 endBlock
         );
 
-    /// @notice Returns snapshot timestamps for a given agent and round.
-    /// @dev Supplementary temporal context for bounty verification and auditing.
-    ///      CP-018 is responsible for the Arena.sol implementation.
+    /// @notice Returns block range for agent snapshot activity
+    /// @dev Supplementary context for bounty verification and auditing.
     /// @param roundId The Arena round identifier.
-    /// @param agentAddress The agent whose timestamps are queried.
-    /// @return startTimestamp Unix timestamp when the round started for this agent.
-    /// @return endTimestamp Unix timestamp when the round ended (0 if still active).
+    /// @param agentAddress The agent whose block range is queried.
+    /// @return firstActionBlock Block number of first executeBatch() call
+    /// @return lastActionBlock Block number of most recent executeBatch() call
     function getSnapshotTimestamps(uint256 roundId, address agentAddress)
         external
         view
-        returns (uint256 startTimestamp, uint256 endTimestamp);
+        returns (uint256 firstActionBlock, uint256 lastActionBlock);
+
+    // ================================================================
+    // Prize Funding (CP-018)
+    // ================================================================
+
+    /// @notice Fund the prize pool for a round from caller's token balance
+    /// @dev Owner-only. Requires prior ERC-20 approval to this contract.
+    /// @param roundId The round to fund
+    /// @param amount Token amount in prizeToken decimals
+    function fundPrize(uint256 roundId, uint256 amount) external;
+
+    // ================================================================
+    // Relayer Management (CP-018)
+    // ================================================================
+
+    /// @notice Authorize or deauthorize a relayer address
+    /// @dev Owner-only. Relayer must be set before executeBatch() can be called.
+    /// @param relayer The address to authorize or revoke
+    /// @param authorized True to authorize, false to revoke
+    function setRelayer(address relayer, bool authorized) external;
 }

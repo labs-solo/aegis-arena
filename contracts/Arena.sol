@@ -2,486 +2,403 @@
 pragma solidity ^0.8.20;
 
 import "./IArena.sol";
-import "./AegisDeployConfig.sol";
+import "openzeppelin-contracts/token/ERC20/utils/SafeERC20.sol";
+import "openzeppelin-contracts/token/ERC20/IERC20.sol";
+import "openzeppelin-contracts/security/ReentrancyGuard.sol";
 
 /// @title Arena
 /// @notice AEGIS Arena game contract — orchestrates AI agent competition
-/// @dev Implements all 8 known issue fixes from plan v2
-contract Arena is IArena {
-  // ================================================================
-  // Type Definitions
-  // ================================================================
+/// @dev CP-018: game engine hardening — authentication, snapshots, prize distribution
+contract Arena is IArena, ReentrancyGuard {
+    using SafeERC20 for IERC20;
 
-  /// @notice Round data structure with explicit duration field (FIX #5)
-  struct RoundData {
-    uint256 roundId;
-    uint256 startTime;
-    uint256 endTime;
-    uint256 roundDuration; // FIX #5: Explicit duration, not derived from endTime
-    uint256 prizePool;
-    address[] agents;
-    mapping(address => uint256) agentVaultIds; // FIX #1: Vault mapping
-    mapping(address => uint256) finalScores; // FIX #4: USDC-denominated scores
-    bool settled;
-  }
+    // ================================================================
+    // Constants
+    // ================================================================
 
-  // ================================================================
-  // State Variables
-  // ================================================================
+    /// @notice Volume proxy unit: 1 action = 1 VOLUME_UNIT (1e6)
+    /// @dev Activity score only — not real USDC volume. See §5.2 scoring model notes.
+    uint256 public constant VOLUME_UNIT = 1e6;
 
-  address public owner;
-  uint256 public nextRoundId = 1;
+    // ================================================================
+    // Type Definitions
+    // ================================================================
 
-  mapping(uint256 => RoundData) public rounds;
-  mapping(uint256 => address[]) public roundAgents;
-
-  // ================================================================
-  // Constructor
-  // ================================================================
-
-  constructor() {
-    owner = msg.sender;
-  }
-
-  // ================================================================
-  // Access Control
-  // ================================================================
-
-  modifier onlyOwner() {
-    require(msg.sender == owner, "Arena: only owner");
-    _;
-  }
-
-  // ================================================================
-  // Core Game Functions (from IArena)
-  // ================================================================
-
-  /// @notice Register agents and create their vaults (FIX #1: calls engine.createVault)
-  /// @param agents Array of agent addresses
-  /// @return roundId The newly created round ID
-  function register(address[] calldata agents) external onlyOwner returns (uint256 roundId) {
-    require(agents.length >= 2, "Arena: need at least 2 agents");
-    require(agents.length <= 10, "Arena: max 10 agents per round");
-
-    roundId = nextRoundId;
-    nextRoundId++;
-
-    RoundData storage round = rounds[roundId];
-    round.roundId = roundId;
-    round.startTime = 0; // Not started yet
-    round.endTime = 0;
-    round.roundDuration = 0;
-    round.prizePool = 0;
-    round.settled = false;
-
-    // Store agents and create vaults (FIX #1: MANDATORY vault creation)
-    for (uint256 i = 0; i < agents.length; i++) {
-      address agent = agents[i];
-      require(agent != address(0), "Arena: invalid agent");
-
-      // FIX #1: Create vault on AEGIS Engine for each agent
-      // In production, would call: uint256 vaultId = engine.createVault()
-      // For this stub, we assign sequential vault IDs
-      uint256 vaultId = roundId * 1000 + i + 1; // e.g., 1001, 1002, 1003 for round 1
-
-      round.agents.push(agent);
-      round.agentVaultIds[agent] = vaultId;
-
-      roundAgents[roundId].push(agent);
-
-      emit AgentRegistered(roundId, agent, vaultId);
+    /// @notice Per-agent snapshot accumulated from authenticated executeBatch() calls
+    /// @dev Activity score proxy. avgSqrtPriceX96 is 0 for MVP (no price oracle).
+    struct AgentSnapshot {
+        uint256 totalVolumeUsdc;   // actionCount * VOLUME_UNIT
+        uint256 avgSqrtPriceX96;   // 0 for MVP — reserved for post-hackathon price oracle
+        uint256 startBlock;        // block.number of first executeBatch() call for this agent
+        uint256 endBlock;          // block.number of most recent executeBatch() call
+        uint256 actionCount;       // raw participation count (scoring primitive)
     }
 
-    emit RoundRegistered(roundId, agents);
-  }
-
-  /// @notice Start a round with explicit duration (FIX #5: stores roundDuration)
-  /// @param roundId The round to start
-  /// @param durationSeconds Duration in seconds
-  function startRound(uint256 roundId, uint256 durationSeconds)
-    external
-    onlyOwner
-  {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
-    require(round.startTime == 0, "Arena: round already started");
-    require(durationSeconds > 0, "Arena: invalid duration");
-
-    // FIX #5: Store duration explicitly, compute endTime from it
-    round.startTime = block.timestamp;
-    round.roundDuration = durationSeconds; // CRITICAL: Store duration explicitly
-    round.endTime = block.timestamp + durationSeconds;
-
-    emit RoundStarted(roundId, durationSeconds);
-  }
-
-  /// @notice Execute batch of agent actions
-  /// @param roundId The active round
-  /// @param agent The agent address
-  /// @param actions Array of encoded action bytes
-  function executeBatch(uint256 roundId, address agent, bytes[] calldata actions)
-    external
-  {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
-    require(round.startTime > 0, "Arena: round not started");
-    require(block.timestamp < round.endTime, "Arena: round ended");
-
-    // Verify agent is registered
-    uint256 vaultId = round.agentVaultIds[agent];
-    require(vaultId != 0, "Arena: agent not registered");
-
-    // In production, would encode and submit to AEGIS Router
-    // For now, just record the action
-    emit ActionsExecuted(roundId, agent, actions);
-  }
-
-  /// @notice Settle a round: compute scores and distribute prizes
-  /// @param roundId The round to settle
-  /// @return winners Ranked winners
-  /// @return prizes Prize amounts
-  function settle(uint256 roundId)
-    external
-    onlyOwner
-    returns (address[] memory winners, uint256[] memory prizes)
-  {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
-    require(round.startTime > 0, "Arena: round started");
-    require(block.timestamp >= round.endTime, "Arena: round not ended");
-    require(!round.settled, "Arena: round already settled");
-
-    address[] storage agents = round.agents;
-    require(agents.length > 0, "Arena: no agents");
-
-    // FIX #4: Compute final scores with WOKB→USDC conversion
-    // This is a stub; full implementation would:
-    // 1. Query vault balances from AEGIS Engine
-    // 2. Convert sL shares to USDC via pool reserves
-    // 3. Convert WOKB to USDC via sqrtPriceX96 formula: price = (sqrtPrice / 2^96)^2
-    // 4. Sum: totalUSDC = sL_converted + WOKB_converted + idle_USDC
-    //
-    // For this stub, assign mock scores
-    for (uint256 i = 0; i < agents.length; i++) {
-      // Mock score: decending from 1000 USDC
-      round.finalScores[agents[i]] = 1000 - (i * 100);
+    /// @notice Round data structure (ARCH-10 + ARCH-13 fixes)
+    struct RoundData {
+        uint256 roundId;
+        uint256 startTime;       // block.timestamp — display/UI
+        uint256 endTime;         // block.timestamp + duration — display/UI
+        uint256 startBlock;      // ARCH-10: block.number — on-chain logic
+        uint256 endBlock;        // ARCH-10: block.number at settle time
+        uint256 roundDuration;
+        uint256 prizePool;
+        address[] agents;
+        mapping(address => uint256) agentVaultIds;
+        mapping(address => bool) registeredInRound;  // ARCH-13: duplicate guard
+        bool settled;
     }
 
-    // Sort agents by score (descending)
-    address[] memory sorted = _sortAgentsByScore(roundId, agents);
+    // ================================================================
+    // State Variables
+    // ================================================================
 
-    // FIX #7: Compute prizes with dust handling
-    // Example: 1000 USDC, 3 agents → [500 + 1, 250, 249]
-    uint256 totalPrizes = 1000e6; // Assume 1000 USDC (1e6 decimals)
-    uint256[] memory allPrizes = new uint256[](agents.length);
+    address public owner;
+    uint256 public nextRoundId = 1;
 
-    if (agents.length == 1) {
-      allPrizes[0] = totalPrizes;
-    } else if (agents.length == 2) {
-      uint256 half = totalPrizes / 2;
-      allPrizes[0] = half + (totalPrizes % 2); // Winner gets dust
-      allPrizes[1] = half;
-    } else {
-      // 3+ agents: 50%, 25%, 25% (or equal split if more)
-      uint256 firstPrize = totalPrizes / 2;
-      uint256 remainder = totalPrizes % 2;
+    address public immutable prizeToken;  // ERC-20 prize token (USDC on X Layer)
 
-      allPrizes[0] = firstPrize + remainder; // Winner gets dust (FIX #7)
+    mapping(uint256 => RoundData) public rounds;
+    mapping(uint256 => address[]) public roundAgents;
 
-      for (uint256 i = 1; i < agents.length; i++) {
-        allPrizes[i] = totalPrizes / (agents.length * 2);
-      }
-    }
+    /// @notice Per-round per-agent snapshot data accumulated during competition
+    mapping(uint256 => mapping(address => AgentSnapshot)) public roundSnapshots;
 
-    // Return winners and prizes in ranked order
-    winners = sorted;
-    prizes = new uint256[](sorted.length);
+    /// @notice Persisted prize amounts from settle() — enables correct getFinalScores()
+    mapping(uint256 => mapping(address => uint256)) public roundPrizes;
 
-    for (uint256 i = 0; i < sorted.length; i++) {
-      prizes[i] = allPrizes[i];
-    }
+    /// @notice Authorized relayers — only these addresses may call executeBatch() / reportEarnings()
+    mapping(address => bool) public authorizedRelayers;
 
-    round.settled = true;
-    emit RoundSettled(roundId, winners, prizes, _getFinalScoresArray(roundId, sorted));
-  }
+    // ================================================================
+    // Events
+    // ================================================================
 
-  // ================================================================
-  // Query Functions
-  // ================================================================
-
-  function getRoundState(uint256 roundId)
-    external
-    view
-    returns (
-      uint256 startTime,
-      uint256 endTime,
-      uint256 roundDuration,
-      bool settled,
-      address[] memory agents
-    )
-  {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
-
-    return (
-      round.startTime,
-      round.endTime,
-      round.roundDuration,
-      round.settled,
-      round.agents
+    /// @notice Emitted when an agent reports earnings breakdown
+    /// @dev For audit trail; does not affect scoring
+    event EarningsReported(
+        uint256 indexed roundId,
+        address indexed agent,
+        uint256 tradingFees,
+        uint256 borrowInterest,
+        uint256 totalEarnings
     );
-  }
 
-  function getFinalScores(uint256 roundId)
-    external
-    view
-    returns (address[] memory agentsRanked, uint256[] memory scores, uint256[] memory prizes)
-  {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
-    require(round.settled, "Arena: round not settled");
+    // ================================================================
+    // Constructor
+    // ================================================================
 
-    address[] memory sorted = _sortAgentsByScore(roundId, round.agents);
-
-    scores = new uint256[](sorted.length);
-    for (uint256 i = 0; i < sorted.length; i++) {
-      scores[i] = round.finalScores[sorted[i]];
+    /// @param _prizeToken ERC-20 token used for prize distribution (USDC on X Layer)
+    constructor(address _prizeToken) {
+        require(_prizeToken != address(0), "Arena: zero prize token");
+        owner = msg.sender;
+        prizeToken = _prizeToken;
     }
 
-    // Prizes would be queried from settlement, returning same format
-    prizes = new uint256[](sorted.length);
+    // ================================================================
+    // Access Control
+    // ================================================================
 
-    return (sorted, scores, prizes);
-  }
-
-  function getAgentVault(uint256 roundId, address agent)
-    external
-    view
-    returns (uint256 vaultId)
-  {
-    return rounds[roundId].agentVaultIds[agent];
-  }
-
-  function isRoundActive(uint256 roundId) external view returns (bool active) {
-    RoundData storage round = rounds[roundId];
-    return round.startTime > 0 && block.timestamp < round.endTime;
-  }
-
-  function roundCount() external view returns (uint256 count) {
-    return nextRoundId - 1;
-  }
-
-  /// @notice Returns trading performance snapshots for a given agent and round.
-  /// @dev CP-017 / CP-018: Called by Bounty.verifyAndPay() for on-chain condition validation.
-  ///      Signature updated to match IArena (CP-017). CP-018 implements real accumulation.
-  ///      MVP stub: returns mock data sufficient for hackathon.
-  /// @param roundId The Arena round ID
-  /// @param agentAddress The agent address to query
-  /// @return totalVolumeUsdc Cumulative USDC volume traded (mock: 5000 USDC)
-  /// @return avgSqrtPriceX96 Time-weighted average sqrt price X96 (mock: 0 — Phase 2)
-  /// @return startBlock Block number at round start (mock: current block)
-  /// @return endBlock Block number at round end (mock: 0 if active)
-  function getSnapshots(uint256 roundId, address agentAddress)
-    external
-    view
-    returns (
-      uint256 totalVolumeUsdc,
-      uint256 avgSqrtPriceX96,
-      uint256 startBlock,
-      uint256 endBlock
-    )
-  {
-    // CP-017: Signature updated to match IArena.getSnapshots(uint256, address) 4-tuple return.
-    // CP-018 is responsible for real accumulation. This stub satisfies the interface.
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
-
-    // Verify agent is registered (vaultId != 0)
-    require(round.agentVaultIds[agentAddress] != 0, "Arena: agent not registered");
-
-    // MVP stub values — CP-018 replaces with real accumulated data
-    totalVolumeUsdc = 5000 * 10 ** 6;   // 5000 USDC mock volume
-    avgSqrtPriceX96 = 0;                 // Phase 2: real price accumulation
-    startBlock = round.startTime > 0 ? block.number : 0;
-    endBlock = 0;                         // 0 = active or unknown
-  }
-
-  /// @notice Returns snapshot timestamps for a given agent and round.
-  /// @dev CP-017: Signature updated to match IArena.getSnapshotTimestamps(uint256, address).
-  ///      CP-018 is responsible for real timestamp accumulation.
-  /// @param roundId The Arena round ID
-  /// @param agentAddress The agent address to query
-  /// @return startTimestamp Unix timestamp when the round started
-  /// @return endTimestamp Unix timestamp when the round ended (0 if active)
-  function getSnapshotTimestamps(uint256 roundId, address agentAddress)
-    external
-    view
-    returns (uint256 startTimestamp, uint256 endTimestamp)
-  {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
-
-    // Suppress unused variable warning (agentAddress used for future per-agent timestamps)
-    agentAddress;
-
-    startTimestamp = round.startTime;
-    endTimestamp = round.endTime > block.timestamp ? 0 : round.endTime;
-  }
-
-  // ================================================================
-  // Internal Helper Functions
-  // ================================================================
-
-  /// @notice Sort agents by final score (descending)
-  /// @param roundId The round ID
-  /// @param agents Array of agent addresses
-  /// @return sorted Agents in descending score order
-  function _sortAgentsByScore(uint256 roundId, address[] storage agents)
-    internal
-    view
-    returns (address[] memory sorted)
-  {
-    RoundData storage round = rounds[roundId];
-
-    sorted = new address[](agents.length);
-    for (uint256 i = 0; i < agents.length; i++) {
-      sorted[i] = agents[i];
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Arena: only owner");
+        _;
     }
 
-    // Bubble sort (simple, O(n²) but fine for small n)
-    for (uint256 i = 0; i < sorted.length; i++) {
-      for (uint256 j = i + 1; j < sorted.length; j++) {
-        if (round.finalScores[sorted[j]] > round.finalScores[sorted[i]]) {
-          (sorted[i], sorted[j]) = (sorted[j], sorted[i]);
+    /// @notice Only authorized relayers may execute batch actions or report earnings
+    modifier onlyRelayer() {
+        require(authorizedRelayers[msg.sender], "Arena: not authorized relayer");
+        _;
+    }
+
+    // ================================================================
+    // Admin Functions
+    // ================================================================
+
+    function setRelayer(address relayer, bool authorized) external onlyOwner {
+        require(relayer != address(0), "Arena: zero relayer");
+        authorizedRelayers[relayer] = authorized;
+        emit RelayerUpdated(relayer, authorized);
+    }
+
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "Arena: zero owner");
+        owner = newOwner;
+    }
+
+    /// @notice Fund the prize pool for a round from caller's token balance
+    /// @param roundId The round to fund
+    /// @param amount Token amount (in prizeToken decimals)
+    /// @dev Owner-only. Requires prior approval: prizeToken.approve(arenaAddress, amount)
+    function fundPrize(uint256 roundId, uint256 amount) external onlyOwner nonReentrant {
+        require(amount > 0, "Arena: zero amount");
+        RoundData storage round = rounds[roundId];
+        require(round.roundId != 0, "Arena: round not found");
+        require(!round.settled, "Arena: round already settled");
+        IERC20(prizeToken).safeTransferFrom(msg.sender, address(this), amount);
+        round.prizePool += amount;
+        emit PrizeFunded(roundId, amount, round.prizePool);
+    }
+
+    // ================================================================
+    // Core Game Functions (from IArena)
+    // ================================================================
+
+    /// @notice Register agents and create their vaults (ARCH-13: duplicate guard)
+    /// @param agents Array of agent addresses
+    /// @return roundId The newly created round ID
+    function register(address[] calldata agents) external onlyOwner returns (uint256 roundId) {
+        require(agents.length >= 2, "Arena: need at least 2 agents");
+        require(agents.length <= 10, "Arena: max 10 agents per round");
+
+        roundId = nextRoundId++;
+
+        RoundData storage round = rounds[roundId];
+        round.roundId = roundId;
+        round.settled = false;
+
+        for (uint256 i = 0; i < agents.length; i++) {
+            address agent = agents[i];
+            require(agent != address(0), "Arena: invalid agent address");
+            // ARCH-13: duplicate guard — per-round, not global
+            require(!round.registeredInRound[agent], "Arena: duplicate agent");
+            round.registeredInRound[agent] = true;
+
+            uint256 vaultId = roundId * 1000 + i + 1;
+            round.agents.push(agent);
+            round.agentVaultIds[agent] = vaultId;
+            roundAgents[roundId].push(agent);
+
+            emit AgentRegistered(roundId, agent, vaultId);
         }
-      }
+
+        emit RoundRegistered(roundId, agents);
+        return roundId;
     }
 
-    return sorted;
-  }
+    /// @notice Start a round with explicit duration (ARCH-10: records block.number)
+    /// @param roundId The round to start
+    /// @param durationSeconds Duration in seconds
+    function startRound(uint256 roundId, uint256 durationSeconds) external onlyOwner {
+        RoundData storage round = rounds[roundId];
+        require(round.roundId != 0, "Arena: round not found");
+        require(round.startTime == 0, "Arena: round already started");
+        require(durationSeconds > 0, "Arena: invalid duration");
 
-  /// @notice Get scores array for sorted agents
-  /// @param roundId The round ID
-  /// @param agents Array of agents in desired order
-  /// @return scores Score for each agent
-  function _getFinalScoresArray(uint256 roundId, address[] memory agents)
-    internal
-    view
-    returns (uint256[] memory scores)
-  {
-    RoundData storage round = rounds[roundId];
-    scores = new uint256[](agents.length);
+        round.startTime = block.timestamp;          // display/UI
+        round.startBlock = block.number;            // ARCH-10: on-chain logic
+        round.roundDuration = durationSeconds;
+        round.endTime = block.timestamp + durationSeconds;
+        // endBlock recorded at settle() time
 
-    for (uint256 i = 0; i < agents.length; i++) {
-      scores[i] = round.finalScores[agents[i]];
+        emit RoundStarted(roundId, durationSeconds);
     }
 
-    return scores;
-  }
+    /// @notice Execute batch of agent actions (ARCH-02: onlyRelayer, ARCH-04: snapshot accumulation)
+    /// @param roundId The active round
+    /// @param agent The agent address
+    /// @param actions Array of encoded action bytes
+    /// @dev Score proxy: each action increments actionCount by 1.
+    ///      ACTIVITY SCORE — measures participation, not PnL.
+    function executeBatch(
+        uint256 roundId,
+        address agent,
+        bytes[] calldata actions
+    ) external onlyRelayer {
+        RoundData storage round = rounds[roundId];
+        require(round.startTime > 0 && !round.settled, "Arena: round not active");
+        require(block.timestamp < round.endTime, "Arena: round ended");
+        require(round.agentVaultIds[agent] != 0, "Arena: agent not registered");
 
-  // ================================================================
-  // Earnings Tracking Functions (Additive Feature)
-  // ================================================================
-  // These functions enable agents to report their earnings breakdown
-  // (trading fees vs borrow interest) for improved auditability.
-  // They do NOT change the scoring formula — the final score remains
-  // the agent's final USDC value (idle + LP value).
-  //
-  // Judge audit: agents can call reportEarnings() to emit tracking data.
-  // This allows external verification of the fee/interest split for each agent.
-  // ================================================================
+        // ARCH-04: Accumulate snapshot
+        AgentSnapshot storage snap = roundSnapshots[roundId][agent];
+        snap.actionCount += actions.length;
+        snap.totalVolumeUsdc += actions.length * VOLUME_UNIT;
+        if (snap.startBlock == 0) snap.startBlock = block.number;  // first call only
+        snap.endBlock = block.number;                               // every call
+        // avgSqrtPriceX96 remains 0 — no price oracle in MVP (KI-006)
 
-  /// @notice Emitted when an agent reports earnings breakdown
-  /// @dev For audit trail; does not affect scoring (score is final USDC value only)
-  event EarningsReported(
-    uint256 indexed roundId,
-    address indexed agent,
-    uint256 tradingFees,      // Accumulated swap fees (wei)
-    uint256 borrowInterest,   // Accrued borrow interest (wei)
-    uint256 totalEarnings     // Sum of fees + interest
-  );
+        emit ActionsExecuted(roundId, agent, actions);
+    }
 
-  /// @notice Allow agent to report earnings breakdown for auditing
-  /// @param roundId The round ID
-  /// @param tradingFees Amount of fees earned from swaps
-  /// @param borrowInterest Amount of interest earned from borrow volume
-  /// @dev Emits EarningsReported for judge audit; does not change score calculation
-  /// @dev Score remains: final USDC value (idle + LP shares converted to USDC)
-  function reportEarnings(
-    uint256 roundId,
-    uint256 tradingFees,
-    uint256 borrowInterest
-  ) external {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
-    
-    // Only agent can report their own earnings
-    uint256 vaultId = round.agentVaultIds[msg.sender];
-    require(vaultId != 0, "Arena: agent not registered");
+    /// @notice Settle a round: proportional distribution + real ERC-20 transfers
+    /// @param roundId The round to settle
+    /// @return winners Agent addresses
+    /// @return prizes Prize amounts
+    function settle(uint256 roundId)
+        external
+        onlyOwner
+        nonReentrant
+        returns (address[] memory winners, uint256[] memory prizes)
+    {
+        RoundData storage round = rounds[roundId];
+        require(round.roundId != 0, "Arena: round not found");
+        require(round.startTime > 0, "Arena: round not started");
+        require(block.timestamp >= round.endTime, "Arena: round not ended");
+        require(!round.settled, "Arena: already settled");
 
-    uint256 totalEarnings = tradingFees + borrowInterest;
-    
-    emit EarningsReported(roundId, msg.sender, tradingFees, borrowInterest, totalEarnings);
-  }
+        // CEI: state writes before interactions
+        round.settled = true;
+        round.endBlock = block.number;  // ARCH-10
 
-  /// @notice Get breakdown of final score components (if available)
-  /// @param roundId The round ID
-  /// @param agent The agent address
-  /// @return idle Agent's idle USDC balance
-  /// @return liquidity Agent's LP share value (in USDC equivalent)
-  /// @return debt Agent's outstanding debt (if any)
-  /// @dev For audit purposes; helps judges understand score composition
-  /// @dev In production, would query actual vault state from AEGIS Engine
-  function getVaultBreakdown(uint256 roundId, address agent)
-    external
-    view
-    returns (
-      uint256 idle,
-      uint256 liquidity,
-      uint256 debt
-    )
-  {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
+        address[] storage agents = round.agents;
+        uint256 n = agents.length;
+        uint256 pool = round.prizePool;
 
-    uint256 vaultId = round.agentVaultIds[agent];
-    require(vaultId != 0, "Arena: agent not registered");
+        // Zero prizePool case: if prizePool == 0, all prizes[i] == 0, no transfers occur.
+        // The round still settles successfully. getFinalScores() returns all zeros.
+        // This is correct behavior for unfunded rounds.
 
-    // Stub: return mock breakdown
-    // In production: would call AEGIS StateView.getVault(vaultId)
-    //
-    // For PassiveLP strategy:
-    // - idle ≈ 50 USDC (half of capital, minus bounty spend)
-    // - liquidity ≈ 50 USDC + accumulated fees (full-range LP position)
-    // - debt = 0 (PassiveLP never borrows)
-    
-    idle = round.finalScores[agent] / 2;     // Mock: half of score
-    liquidity = round.finalScores[agent] / 2; // Mock: other half
-    debt = 0;                                  // PassiveLP has no debt
-  }
+        // Compute activity scores
+        uint256 totalActions = 0;
+        uint256[] memory scores = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) {
+            scores[i] = roundSnapshots[roundId][agents[i]].actionCount;
+            totalActions += scores[i];
+        }
 
-  /// @notice Get final value of agent's vault (score + detail)
-  /// @param roundId The round ID  
-  /// @param agent The agent address
-  /// @return finalValue Final USDC-denominated score
-  /// @return breakdown Breakdown of how score is composed
-  /// @dev Used for judge verification and agent performance analysis
-  function getVaultFinalValue(uint256 roundId, address agent)
-    external
-    view
-    returns (uint256 finalValue, string memory breakdown)
-  {
-    RoundData storage round = rounds[roundId];
-    require(round.roundId != 0, "Arena: round not found");
-    require(round.settled, "Arena: round not settled");
+        // Proportional distribution; equal split if no activity
+        // Dust note: sum(prizes[i]) may be < pool due to integer division truncation.
+        // Maximum dust per settle() call = (n-1) tokens (negligible at expected prize scales).
+        // Remainder stays in contract; not burned, not redistributed.
+        // A follow-on CP may add an owner dust-sweep function.
+        winners = new address[](n);
+        prizes = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) {
+            winners[i] = agents[i];
+            if (totalActions > 0) {
+                prizes[i] = pool * scores[i] / totalActions;
+            } else {
+                prizes[i] = n > 0 ? pool / n : 0;
+            }
+            // Persist prize for getFinalScores() (ARCH-05 fix)
+            roundPrizes[roundId][agents[i]] = prizes[i];
+        }
 
-    uint256 vaultId = round.agentVaultIds[agent];
-    require(vaultId != 0, "Arena: agent not registered");
+        // Token transfers (ARCH-05 fix) — after all state writes (CEI)
+        for (uint256 i = 0; i < n; i++) {
+            if (prizes[i] > 0 && pool > 0) {
+                IERC20(prizeToken).safeTransfer(agents[i], prizes[i]);
+            }
+        }
 
-    finalValue = round.finalScores[agent];
+        emit RoundSettled(roundId, winners, prizes, scores);
+    }
 
-    // In production: construct breakdown from vault state
-    // For MVP: return mock string
-    breakdown = "idle + liquidity_shares (at current share price)";
-  }
+    // ================================================================
+    // Query Functions
+    // ================================================================
+
+    function getRoundState(uint256 roundId)
+        external
+        view
+        returns (
+            uint256 startTime,
+            uint256 endTime,
+            uint256 roundDuration,
+            bool settled,
+            address[] memory agents
+        )
+    {
+        RoundData storage round = rounds[roundId];
+        require(round.roundId != 0, "Arena: round not found");
+
+        return (
+            round.startTime,
+            round.endTime,
+            round.roundDuration,
+            round.settled,
+            round.agents
+        );
+    }
+
+    /// @notice Get final scores and prizes for a settled round (ARCH-05 fix: reads roundPrizes)
+    function getFinalScores(uint256 roundId)
+        external
+        view
+        returns (address[] memory agentsRanked, uint256[] memory scores, uint256[] memory prizes)
+    {
+        RoundData storage round = rounds[roundId];
+        require(round.roundId != 0, "Arena: round not found");
+        require(round.settled, "Arena: round not settled");
+
+        address[] storage agents = round.agents;
+        uint256 n = agents.length;
+
+        agentsRanked = new address[](n);
+        scores = new uint256[](n);
+        prizes = new uint256[](n);
+
+        for (uint256 i = 0; i < n; i++) {
+            agentsRanked[i] = agents[i];
+            scores[i] = roundSnapshots[roundId][agents[i]].actionCount;
+            prizes[i] = roundPrizes[roundId][agents[i]];  // real persisted prizes
+        }
+        // Note: registration order preserved; not sorted by score. Caller sorts if needed.
+    }
+
+    function getAgentVault(uint256 roundId, address agent)
+        external
+        view
+        returns (uint256 vaultId)
+    {
+        return rounds[roundId].agentVaultIds[agent];
+    }
+
+    function isRoundActive(uint256 roundId) external view returns (bool active) {
+        RoundData storage round = rounds[roundId];
+        return round.startTime > 0 && block.timestamp < round.endTime;
+    }
+
+    function roundCount() external view returns (uint256 count) {
+        return nextRoundId - 1;
+    }
+
+    /// @notice Called by Bounty.sol (CP-017) to verify claim conditions
+    /// @dev Return signature locked by CP-017 APPROVED: (uint256, uint256, uint256, uint256)
+    function getSnapshots(uint256 roundId, address agentAddress)
+        external
+        view
+        returns (
+            uint256 totalVolumeUsdc,
+            uint256 avgSqrtPriceX96,
+            uint256 startBlock,
+            uint256 endBlock
+        )
+    {
+        AgentSnapshot storage snap = roundSnapshots[roundId][agentAddress];
+        return (snap.totalVolumeUsdc, snap.avgSqrtPriceX96, snap.startBlock, snap.endBlock);
+    }
+
+    /// @notice Returns block range for agent snapshot activity (ARCH-11)
+    function getSnapshotTimestamps(uint256 roundId, address agentAddress)
+        external
+        view
+        returns (uint256 firstActionBlock, uint256 lastActionBlock)
+    {
+        AgentSnapshot storage snap = roundSnapshots[roundId][agentAddress];
+        return (snap.startBlock, snap.endBlock);
+    }
+
+    // ================================================================
+    // Earnings Tracking Functions
+    // ================================================================
+
+    /// @notice Report earnings breakdown for an agent (relayer-only, ARCH-08 fix)
+    /// @param roundId The round ID
+    /// @param agent The agent to report for
+    /// @param tradingFees Amount of fees earned from swaps
+    /// @param borrowInterest Amount of interest earned from borrow volume
+    /// @dev ARCH-08 fix: restricted to onlyRelayer. Values are NOT verified on-chain.
+    ///      Do not treat as authoritative audit trail — relayer-reported hints only.
+    function reportEarnings(
+        uint256 roundId,
+        address agent,
+        uint256 tradingFees,
+        uint256 borrowInterest
+    ) external onlyRelayer {
+        RoundData storage round = rounds[roundId];
+        require(round.roundId != 0, "Arena: round not found");
+        require(round.agentVaultIds[agent] != 0, "Arena: agent not registered");
+        emit EarningsReported(roundId, agent, tradingFees, borrowInterest, tradingFees + borrowInterest);
+    }
 }
