@@ -44,7 +44,7 @@ This is not a simulation. Every transaction hash below is confirmed on X Layer m
 |---|---|---|---|
 | PassiveLP | `0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02` | Full-range LP | ✅ Active (LP deployed) |
 | TrendFollower | `0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1` | Trend trading | ⏳ Funded (0.17 OKB, 800 USD₮0); **Vault deposit failed** |
-| Predator | `0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D` | Liquidation hunter | 🟡 FUNDED — Permit2 configured |
+| Predator | Delta-neutral market making | ✅ LIVE — vault active, 10.5 OKB deposited configured |
 
 ### PassiveLP — Live LP Position
 
@@ -155,3 +155,15 @@ If vault deposit cannot be resolved:
 - [PASSIVE_LP_POSITION.md](./PASSIVE_LP_POSITION.md) — full position details + verification commands
 - [README.md](./README.md) — architecture, agent strategies, Bounty Bonds mechanism
 - [deploy/addresses.json](./deploy/addresses.json) — all deployed addresses
+
+---
+
+## 🏁 All Three Agents Live — $(date -u '+%Y-%m-%dT%H:%M UTC')
+
+| Agent | Deposit TX | Deposited |
+|---|---|---|
+| PassiveLP | [0x6aef90e9...](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95) | 5.15 OKB + 441 USD₮0 |
+| TrendFollower | [0x7cfe18cb...](https://www.okx.com/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006) | 0.152 OKB + 786 USD₮0 |
+| Predator | [0x24150952...](https://www.okx.com/explorer/xlayer/tx/0x241509528434c9d1bc5e570c72f84fd14a9274594e767b767eecc78ed9eed2ac) | 9.51 OKB + 27 USD₮0 |
+
+**The game is live. All agents have active vault positions on X Layer mainnet.**
