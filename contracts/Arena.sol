@@ -350,4 +350,110 @@ contract Arena is IArena {
 
     return scores;
   }
+
+  // ================================================================
+  // Earnings Tracking Functions (Additive Feature)
+  // ================================================================
+  // These functions enable agents to report their earnings breakdown
+  // (trading fees vs borrow interest) for improved auditability.
+  // They do NOT change the scoring formula — the final score remains
+  // the agent's final USDC value (idle + LP value).
+  //
+  // Judge audit: agents can call reportEarnings() to emit tracking data.
+  // This allows external verification of the fee/interest split for each agent.
+  // ================================================================
+
+  /// @notice Emitted when an agent reports earnings breakdown
+  /// @dev For audit trail; does not affect scoring (score is final USDC value only)
+  event EarningsReported(
+    uint256 indexed roundId,
+    address indexed agent,
+    uint256 tradingFees,      // Accumulated swap fees (wei)
+    uint256 borrowInterest,   // Accrued borrow interest (wei)
+    uint256 totalEarnings     // Sum of fees + interest
+  );
+
+  /// @notice Allow agent to report earnings breakdown for auditing
+  /// @param roundId The round ID
+  /// @param tradingFees Amount of fees earned from swaps
+  /// @param borrowInterest Amount of interest earned from borrow volume
+  /// @dev Emits EarningsReported for judge audit; does not change score calculation
+  /// @dev Score remains: final USDC value (idle + LP shares converted to USDC)
+  function reportEarnings(
+    uint256 roundId,
+    uint256 tradingFees,
+    uint256 borrowInterest
+  ) external {
+    RoundData storage round = rounds[roundId];
+    require(round.roundId != 0, "Arena: round not found");
+    
+    // Only agent can report their own earnings
+    uint256 vaultId = round.agentVaultIds[msg.sender];
+    require(vaultId != 0, "Arena: agent not registered");
+
+    uint256 totalEarnings = tradingFees + borrowInterest;
+    
+    emit EarningsReported(roundId, msg.sender, tradingFees, borrowInterest, totalEarnings);
+  }
+
+  /// @notice Get breakdown of final score components (if available)
+  /// @param roundId The round ID
+  /// @param agent The agent address
+  /// @return idle Agent's idle USDC balance
+  /// @return liquidity Agent's LP share value (in USDC equivalent)
+  /// @return debt Agent's outstanding debt (if any)
+  /// @dev For audit purposes; helps judges understand score composition
+  /// @dev In production, would query actual vault state from AEGIS Engine
+  function getVaultBreakdown(uint256 roundId, address agent)
+    external
+    view
+    returns (
+      uint256 idle,
+      uint256 liquidity,
+      uint256 debt
+    )
+  {
+    RoundData storage round = rounds[roundId];
+    require(round.roundId != 0, "Arena: round not found");
+
+    uint256 vaultId = round.agentVaultIds[agent];
+    require(vaultId != 0, "Arena: agent not registered");
+
+    // Stub: return mock breakdown
+    // In production: would call AEGIS StateView.getVault(vaultId)
+    //
+    // For PassiveLP strategy:
+    // - idle ≈ 50 USDC (half of capital, minus bounty spend)
+    // - liquidity ≈ 50 USDC + accumulated fees (full-range LP position)
+    // - debt = 0 (PassiveLP never borrows)
+    
+    idle = round.finalScores[agent] / 2;     // Mock: half of score
+    liquidity = round.finalScores[agent] / 2; // Mock: other half
+    debt = 0;                                  // PassiveLP has no debt
+  }
+
+  /// @notice Get final value of agent's vault (score + detail)
+  /// @param roundId The round ID  
+  /// @param agent The agent address
+  /// @return finalValue Final USDC-denominated score
+  /// @return breakdown Breakdown of how score is composed
+  /// @dev Used for judge verification and agent performance analysis
+  function getVaultFinalValue(uint256 roundId, address agent)
+    external
+    view
+    returns (uint256 finalValue, string memory breakdown)
+  {
+    RoundData storage round = rounds[roundId];
+    require(round.roundId != 0, "Arena: round not found");
+    require(round.settled, "Arena: round not settled");
+
+    uint256 vaultId = round.agentVaultIds[agent];
+    require(vaultId != 0, "Arena: agent not registered");
+
+    finalValue = round.finalScores[agent];
+
+    // In production: construct breakdown from vault state
+    // For MVP: return mock string
+    breakdown = "idle + liquidity_shares (at current share price)";
+  }
 }

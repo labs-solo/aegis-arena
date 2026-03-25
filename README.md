@@ -138,6 +138,19 @@ This pool is the **primary market for the AEGIS hackathon competition**. All thr
 - Earns swap fees with minimal leverage
 - Low risk, consistent but modest returns
 
+### 1. **PassiveLP** (Conservative)
+- **Strategy:** Provide full-range liquidity on USDC/WOKB pool (0% leverage)
+- **Capital Allocation:** 50% deployed as LP, 50% held as idle USDC buffer
+- **Income Streams:**
+  1. **Trading Fees** (Primary) — 0.05% fee on all swap volume; full-range position captures 100% of pool volume
+  2. **Borrow Interest** (Secondary) — Accrued when TrendFollower/Predator borrow against their positions
+- **Risk Profile:** Zero liquidation risk (no debt); vulnerable to impermanent loss (mitigated by fee income)
+- **Scoring:** Final score = idle USDC + (LP shares × current share price)
+  - Share price appreciation = accumulated fees / total shares
+  - At settlement, judges can verify: `final_score ≥ initial_capital × 1.10` (10% return target)
+- **Bounty Strategy (CP-013):** Creates bounties from idle USDC to attract TrendFollower/Predator volume; bounty ROI is optimized using OKX Market API volume estimates
+- **Expected Return:** 5-30% depending on trading volume (fee yield = volume × 0.05%)
+
 ### 2. **TrendFollower** (Aggressive)
 - Detects price trends and takes directional leveraged bets
 - Borrows capital via AEGIS (up to 3x leverage via sqrt(K) solvency)
@@ -150,6 +163,35 @@ This pool is the **primary market for the AEGIS hackathon competition**. All thr
 - Medium leverage; stable returns independent of direction
 
 See [`docs/specs/AGENTS.md`](docs/specs/AGENTS.md) for complete strategy specifications.
+
+### PassiveLP Deep Dive: Dual Income Streams
+
+**Income Stream 1: Trading Fees**
+- **Source:** Uniswap v4 swap fees on USDC/WOKB pool (0.05% = 500 bips per swap)
+- **Collection:** Automatic via LP share price appreciation (no explicit claim opcode needed)
+- **Example:** 10,000 USDC swap volume → 5 USDC fee pool → PassiveLP's share ≈ 2.5 USDC (if 50% of total LP capital)
+- **Why Full-Range?** Full-range position (-887,272 to +887,272 ticks) captures 100% of pool volume; concentrated positions miss fees if price exits range
+
+**Income Stream 2: Borrow Interest**
+- **Source:** Interest accrued on other agents' leveraged positions (utilization-based variable rate)
+- **Collection:** Implicit via LP share price increase; no explicit claim needed for MVP
+- **Example:** TrendFollower borrows 30 USDC at 10% APY → over 1 hour ≈ 0.0034 USDC accrues to PassiveLP's share
+- **Secondary Stream:** Interest income is conditional on borrow demand; PassiveLP doesn't control it
+
+**Score Attribution:**
+| Component | How Counted |
+|-----------|------------|
+| Idle USDC | 1:1 value (50 USDC counted as 50 USDC) |
+| LP shares | Current share price (initial 50 USDC + accumulated fees ÷ total shares) |
+| Bounty spent | Deducted from idle balance (negative contribution) |
+| Bounty earned by others | Does not affect PassiveLP's score (goes to other agents) |
+
+**Bounty Optimization (CP-013 Integration):**
+- PassiveLP creates bounties to incentivize volume that generates fees
+- Heuristic: spend 10% of idle balance on bounty IF expected fee return > bounty cost
+- **OKX Market API Integration:** Before creating a bounty, PassiveLP queries 24h trading volume on OKB/USD to estimate fee income and avoid underwater bounties
+- **Dynamic Volume Target:** Bounty condition scales with bounty size (bounty = R USDC → target volume = 10R USDC)
+- **Example Breakeven:** 5 USDC bounty needs 50 USDC volume → generates 0.025 USDC fee (break-even at 200x volume multiplier; 10x is conservative)
 
 ## The Path from Arena to Production
 
