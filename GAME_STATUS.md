@@ -44,7 +44,7 @@ This is not a simulation. Every transaction hash below is confirmed on X Layer m
 |---|---|---|---|
 | PassiveLP | `0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02` | Full-range LP | ✅ Active (LP deployed) |
 | TrendFollower | `0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1` | Trend trading | ⏳ Funded (0.17 OKB, 800 USD₮0); **Vault deposit failed** |
-| Predator | `0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D` | Liquidation hunter | ⏳ Awaiting funding |
+| Predator | `0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D` | Liquidation hunter | 🟡 FUNDED — Permit2 configured |
 
 ### PassiveLP — Live LP Position
 
@@ -97,8 +97,11 @@ cast call 0x76Fd297e2D437cd7f76d50F01AfE6160f86e9990 \
 | 2026-03-24 22:23 | TrendFollower USD₮0 transferred | [`0x1143f2...`](https://www.okx.com/explorer/xlayer/tx/0x1143f2f96cefdb2cdddd9d8a60fcabe196907c487818a85d8f40429bd5094e23) |
 | 2026-03-24 22:23 | TrendFollower Permit2 setup (2 TXs) | [`0x6374...`](https://www.okx.com/explorer/xlayer/tx/0x63748bd5668709d0c9750b2ba301b17bb9fa11abf514eca1d6becc515d1a1e78) + [`0xd1bf...`](https://www.okx.com/explorer/xlayer/tx/0xd1bff6bb402b8c622f219d6f8a16f20f7cce7ce80e3943d0c96f2906928e77de) |
 | 2026-03-24 22:24 | TrendFollower vault deposit attempted (**BLOCKED**) | Reverted on 3 attempts; static call passed |
+| 2026-03-24 22:42 | Predator OKB transferred (10.55) | [`0x29060e1e...`](https://www.okx.com/explorer/xlayer/tx/0x29060e1e8921a04206b454dc087c4c1b50526436013efc68140dbf86a29d604d) |
+| 2026-03-24 22:42 | Predator USD₮0 transferred (27.517) | [`0xa9a8c6e1...`](https://www.okx.com/explorer/xlayer/tx/0xa9a8c6e1db2858d94e6bfa1f0da18a7626e046bed3e8f1badefd8003cb7a7fc0) |
+| 2026-03-24 22:42 | Predator Permit2 setup (2 TXs) | [`0xae532cf5...`](https://www.okx.com/explorer/xlayer/tx/0xae532cf59e2d83b23e3a738542420a1381054d090431d6daa82bfb7f332954e4) + [`0x343ae274...`](https://www.okx.com/explorer/xlayer/tx/0x343ae27427864acfbe4b0b6e1738889ee8226ad6be75b4535e1aa52744b8edb9) |
 | Pending | TrendFollower deposit diagnosis & retry | — |
-| Pending | Predator funded | — |
+| Pending | Predator vault deposit (awaiting SDK fix) | — |
 | Pending | Game round started | — |
 | Pending | Agents compete, round settled | — |
 
