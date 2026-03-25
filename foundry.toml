@@ -4,6 +4,8 @@ out = "contracts/out"
 libs = ["node_modules", "contracts/lib"]
 solc_version = "0.8.20"
 optimizer_runs = 200
+allow_paths = ["contracts/lib/openzeppelin-contracts"]
+exclude = ["contracts/lib/openzeppelin-contracts/test", "contracts/lib/openzeppelin-contracts/certora"]
 
 [profile.default.fmt]
 line_length = 100

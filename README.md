@@ -193,18 +193,14 @@ See [`docs/specs/AGENTS.md`](docs/specs/AGENTS.md) for complete strategy specifi
 - **Dynamic Volume Target:** Bounty condition scales with bounty size (bounty = R USDC → target volume = 10R USDC)
 - **Example Breakeven:** 5 USDC bounty needs 50 USDC volume → generates 0.025 USDC fee (break-even at 200x volume multiplier; 10x is conservative)
 
-#### Initialization Swap
+#### Funding
 
-Before deploying liquidity, PassiveLP executes a single initialization swap: it converts 50% of its USD₮0 to OKB using our AegisHook pool exclusively (not aggregated across all Uniswap liquidity). A 3% slippage cap is enforced at the protocol level via `amountOutMinimum` on the `SWAP_EXACT_IN_SINGLE` call — if pool conditions are too shallow, the agent holds USD₮0 rather than accepting excessive slippage.
+PassiveLP receives pre-split assets directly: both OKB and USD₮0 in the exact ratio required for a balanced full-range LP position at the current pool price. No initialization swap is needed — the deployer transfers the correct token proportions computed from the live sqrtPriceX96 of the pool.
 
-- **Trigger:** USD₮0 balance ≥ 100 (meaningful amount) AND OKB balance < 5 (insufficient for LP)
-- **Execution:** Encodes swap as `SWAP_EXACT_IN_SINGLE` with:
-  - Pool: AegisHook pool only (`0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4`)
-  - Direction: USD₮0 (token1) → OKB (token0) via `zeroForOne=false`
-  - Amount: 50% of USD₮0 balance (e.g., 450 USD₮0 → ~10 OKB at $45/OKB)
-  - Slippage: `amountOutMinimum = expected_output × (1 - 0.03)` (3% maximum loss)
-- **Emergency Abort:** If expected OKB output < 8 OKB equivalent (indicates severely shallow pool), swap is skipped and USD₮0 is held
-- **Post-Swap:** Sets `initialized = true` flag to prevent re-triggering; proceeds to full-range LP deployment using received OKB + remaining USD₮0
+- **Funding Requirement:** OKB ≥ 5 OKB AND USD₮0 ≥ 100 USD₮0
+- **Pre-Compute:** Deployer calculates exact amounts using current pool price (sqrtPriceX96)
+- **Transfer:** Both assets transferred to agent wallet before decideAction() is called
+- **Deploy:** Agent immediately uses both assets for full-range LP position (no swap, no slippage risk)
 
 ## The Path from Arena to Production
 

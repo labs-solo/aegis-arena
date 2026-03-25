@@ -10,10 +10,10 @@ library AegisDeployConfig {
   // ================================================================
 
   /// @notice Uniswap v4 PoolManager
-  address public constant POOL_MANAGER = 0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32;
+  address public constant POOL_MANAGER = 0x360E68faCcca8cA495c1B759Fd9EEe466db9FB32;
 
   /// @notice AEGIS Engine state view contract
-  address public constant STATE_VIEW = 0x76fd297e2d437cd7f76d50f01afe6160f86e9990;
+  address public constant STATE_VIEW = 0x76Fd297e2D437cd7f76d50F01AfE6160f86e9990;
 
   /// @notice Permit2 for token approvals
   address public constant PERMIT2 = 0x000000000022D473030F116dDEE9F6B43aC78BA3;
@@ -29,7 +29,7 @@ library AegisDeployConfig {
   address public constant WOKB = 0xe538905cf8410324e03A5A23C1c177a474D59b2b;
 
   /// @notice Circle USDC stablecoin
-  address public constant USDC = 0x74b7f16337b8972027f6196a17a631ac6de26d22;
+  address public constant USDC = 0x74b7F16337b8972027F6196A17a631aC6dE26d22;
 
   // ================================================================
   // Pool Configuration
