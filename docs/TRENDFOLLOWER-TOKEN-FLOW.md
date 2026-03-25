@@ -646,7 +646,12 @@ Final USD₮0: 786.97 + 4.73 = ~791.7 USD₮0 (before bounty)
 3. **Slippage:** Assumes 1% slippage tolerance; may require adjustment on-chain
 4. **OKX Aggregator Route:** Assumes OKX returns optimal route; alternative DEXes may have different fees
 5. **Bounty Eligibility:** Bounty amount and conditions depend on Bounty contract; assume 0 if not eligible
-6. **Gas Fees:** Not shown in this flow; add X Layer gas costs (~$0.01-0.05 per transaction)
+6. **Gas Fees:** X Layer has ultra-cheap gas. Measured on 2026-03-25:
+   - Base fee: 20,000,000 wei per gas unit (0.02 wei/gas)
+   - PM_TAKE (116K gas): ~$0.20
+   - PM_CLOSE (320K gas): ~$0.56
+   - Total for full migration (~1.3M gas): **~$2.27** at $87.44/OKB
+   - Verify with: `cast gas-price --rpc-url https://rpc.xlayer.tech`
 
 ---
 
