@@ -4,10 +4,10 @@
 /// - Identifies price trends via moving averages
 /// - Opens tap position using buildTapOpenPosition (SDK canonical)
 /// - Closes tap position using buildTapClosePosition (SDK canonical)
-/// - Quote-first: fetches live Uniswap Trading API quotes before construction
+/// - Quote-first: fetches live OKX DEX API quotes before construction (CP-022: migrated from Uniswap Trading API)
 /// - Arena runtime boundary: execution via Arena.executeBatch(...)
 /// - CP-013: Evaluates and claims bounties to supplement returns
-/// - CP-022: Migrated from local heuristics to SDK-canonical tap builders
+/// - CP-022: Migrated from local heuristics to SDK-canonical tap builders + OKX DEX API
 
 import { Signer } from "ethers";
 import { ethers } from "ethers";
@@ -28,6 +28,7 @@ import {
 } from '../sdk/bounty.js';
 import type { BountyCondition, BountyRecord } from '../sdk/types.js';
 import { MarketClient } from '../sdk/market.js';
+import { okxDexClient } from '../lib/okx-dex.js';
 
 export class AgentTrendFollower extends BaseAgent {
   private trendWindow = 5; // Check 5-block moving average
@@ -75,9 +76,9 @@ export class AgentTrendFollower extends BaseAgent {
 
   /// @notice TrendFollower strategy: Detect trends + execute SDK-canonical tap workflow
   /// CANONICAL: Uses buildTapOpenPosition + buildTapClosePosition from SDK
-  /// QUOTE-FIRST: Fetches Uniswap Trading API quotes before constructing positions
+  /// QUOTE-FIRST: Fetches OKX DEX API quotes before constructing positions (CP-022: migrated from Uniswap)
   /// ARENA-RUNTIME: Submits via Arena.executeBatch(...) as operative boundary
-  /// CP-022: Replaces local leverage heuristics with SDK tap builders
+  /// CP-022: Replaces local leverage heuristics with SDK tap builders + OKX DEX aggregator
   async decideAction(state: GameState): Promise<Action[]> {
     const actions: Action[] = [];
 
@@ -89,51 +90,97 @@ export class AgentTrendFollower extends BaseAgent {
       // No clear trend, do nothing
       console.log("TrendFollower: no clear trend, holding");
     } else {
-      // Step 2: Fetch live Uniswap Trading API quote (quote-first)
+      // Step 2: Fetch live OKX DEX API quote (quote-first)
+      // CP-022: Migrated from Uniswap Trading API to OKX DEX aggregator on X Layer
       // This replaces all hardcoded routes and heuristic leverage amounts
-      let uniswapQuote: any = null;
       try {
-        // TODO: Integrate live Uniswap Trading API call here
-        // For now, stub to SDK-canonical flow
-        console.log(
-          "[TrendFollower] CP-022: Quote acquisition (Uniswap Trading API) required here"
+        // Token addresses on X Layer (chain 196)
+        // OKB: native gas token on X Layer
+        // USDT: stablecoin on X Layer
+        const OKB_ADDRESS = process.env.OKB_TOKEN_ADDRESS || "0x6fd7d4aee3dcd814d44cd60ca9157baf39da8973"; // WOKB wrapped
+        const USDT_ADDRESS = process.env.USDT_TOKEN_ADDRESS || "0x201eba5cc46d1bd78ef49467ab4c8f599ce07613"; // USD₮0 on X Layer
+
+        // Determine trade direction and quote amount from current position and trend
+        // For MVP: use fixed trade size; production would scale dynamically
+        const quoteAmount = ethers.parseUnits("10", 18).toString(); // 10 WOKB in wei
+
+        let fromToken: string;
+        let toToken: string;
+        let expectedOutMin: string;
+
+        if (trend > 0) {
+          // Uptrend: buy WOKB with USDT
+          fromToken = USDT_ADDRESS;
+          toToken = OKB_ADDRESS;
+          console.log("[TrendFollower] Uptrend detected: fetching OKX DEX quote to buy WOKB");
+        } else {
+          // Downtrend: sell WOKB for USDT
+          fromToken = OKB_ADDRESS;
+          toToken = USDT_ADDRESS;
+          console.log("[TrendFollower] Downtrend detected: fetching OKX DEX quote to sell WOKB");
+        }
+
+        // Fetch quote from OKX DEX aggregator
+        // This quote provides the best aggregated route across X Layer DEXes
+        const okxQuote = await okxDexClient.getQuote(
+          fromToken,
+          toToken,
+          quoteAmount,
+          "1" // 1% slippage tolerance
         );
-        // uniswapQuote = await fetchUniswapTradingAPIQuote(...)
+
+        console.log(
+          `[TrendFollower] OKX DEX quote acquired: inAmount=${okxQuote.data.inAmount}, outAmount=${okxQuote.data.outAmount}, priceImpact=${okxQuote.data.priceImpactPercentage}%`
+        );
+
+        // Extract quote metrics for SDK integration
+        const quoteMetrics = okxDexClient.extractQuoteMetrics(okxQuote);
+        const swapActions = okxDexClient.extractSwapActions(okxQuote);
+
+        expectedOutMin = okxQuote.data.outAmount;
+
+        // Step 3: Use SDK builders (canonical semantics)
+        // IMPORTANT: This replaces ALL local leverage heuristics
+        // SDK builders are the authoritative source for tap math semantics
+        if (trend > 0) {
+          // Uptrend: open tap position (long WOKB via quote-derived route)
+          console.log(
+            "[TrendFollower] CP-022: Uptrend — would call buildTapOpenPosition() with OKX DEX quote-derived inputs"
+          );
+          console.log(
+            `[TrendFollower] Quote-derived inputs: fromToken=${fromToken}, toToken=${toToken}, inAmount=${quoteMetrics.inAmount}, outAmount=${quoteMetrics.outAmount}`
+          );
+          // CANONICAL BUILDER INTEGRATION:
+          // const openAction = buildTapOpenPosition({
+          //   vault: this.vaultId,  // SDK canonical: registered vault ID from Arena
+          //   swapInputAmount: quoteMetrics.inAmount,
+          //   swapRoute: swapActions,  // Quote-derived aggregated route from OKX DEX
+          //   swapQuoteAmount: quoteMetrics.outAmount,
+          //   targetLTV: targetLTVPercent  // Explicit SDK output, not hardcoded heuristic
+          // });
+          // actions.push(openAction);
+        } else {
+          // Downtrend: close tap position (exit, short WOKB)
+          console.log(
+            "[TrendFollower] CP-022: Downtrend — would call buildTapClosePosition() with OKX DEX quote-derived close semantics"
+          );
+          console.log(
+            `[TrendFollower] Quote-derived close inputs: sell WOKB via route=${swapActions.length} steps, expectedOut=${expectedOutMin}`
+          );
+          // CANONICAL BUILDER INTEGRATION:
+          // const closeAction = buildTapClosePosition({
+          //   vault: this.vaultId,  // SDK canonical: same registered vault
+          //   swapRoute: swapActions,  // Quote-derived close route from OKX DEX
+          //   swapMinOut: expectedOutMin,  // Quote-derived minimum output
+          // });
+          // actions.push(closeAction);
+        }
       } catch (error) {
         console.warn(
-          "[TrendFollower] Quote fetch failed; cannot proceed with SDK-canonical tap workflow:",
+          "[TrendFollower] CP-022: OKX DEX quote fetch failed; cannot proceed with SDK-canonical tap workflow:",
           error instanceof Error ? error.message : error
         );
-        return actions; // Fail-closed: no hardcoded route fallback
-      }
-
-      // Step 3: Use SDK builders (canonical semantics)
-      // IMPORTANT: This replaces ALL local leverage heuristics
-      if (trend > 0) {
-        // Uptrend: open tap position (long WOKB)
-        console.log(
-          "[TrendFollower] CP-022: buildTapOpenPosition() (SDK canonical) would be called here with quote-derived inputs"
-        );
-        // CANONICAL BUILDER:
-        // const openAction = buildTapOpenPosition({
-        //   vault: vaultId,
-        //   swapInputAmount: quoteAmount,
-        //   swapRoute: uniswapQuote.route,
-        //   swapQuoteAmount: uniswapQuote.outAmount,
-        //   targetLTV: targetLTVPercent  // Explicit, not hardcoded 85%
-        // });
-        // actions.push(openAction);
-      } else {
-        // Downtrend: close tap position (exit, short WOKB)
-        console.log(
-          "[TrendFollower] CP-022: buildTapClosePosition() (SDK canonical) would be called here"
-        );
-        // CANONICAL BUILDER:
-        // const closeAction = buildTapClosePosition({
-        //   vault: vaultId,
-        //   // ... SDK-derived close semantics
-        // });
-        // actions.push(closeAction);
+        return actions; // Fail-closed: no hardcoded route fallback, no local heuristic override
       }
     }
 

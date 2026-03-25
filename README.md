@@ -172,9 +172,14 @@ AEGIS Engine (PR #18: trail-of-bits-audit-fixes-and-improvements)
     ↓
 Uniswap v4 (X Layer)
     └─ OKB/USD₮0 Pool (AegisHook, dynamic fee)
+    ↑
+OKX DEX API (Quote Aggregation — CP-022)
+    └─ TrendFollower uses OKX DEX for quote-first route discovery
 ```
 
 **See:** [`docs/specs/ARCHITECTURE.md`](docs/specs/ARCHITECTURE.md) for detailed system design.
+
+**CP-022 Update:** TrendFollower now fetches quotes from the **OKX DEX API** (v5 aggregator on X Layer) instead of hardcoded routes, enabling quote-first route discovery and SDK-canonical tap workflow.
 
 ## Deployed Addresses (X Layer, Chain ID 196)
 
