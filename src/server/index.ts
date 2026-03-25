@@ -143,7 +143,7 @@ app.get("/api/game/scores/:roundId", async (req, res) => {
 // Error handling
 // ================================================================
 
-app.use((err: any, req: express.Request, res: express.Response) => {
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error("Unhandled error:", err);
   res.status(500).json({
     error: "Internal server error",
