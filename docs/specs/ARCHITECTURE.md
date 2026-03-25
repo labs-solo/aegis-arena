@@ -28,7 +28,7 @@
               ▼
     ┌─────────────────────────────────┐
     │   Uniswap v4 PoolManager        │ ← Swap Execution
-    │   USDC/WOKB Pool (5 bps)        │
+    │   OKB/USD₮0 Pool (AEGIS Hook)   │
     └─────────────────────────────────┘
               │
               ▼
@@ -162,7 +162,7 @@ Batch 2: AE_LOCK_VAULT
 - StateView: 0x76fd29...
 - WOKB (OKB-X): 0xe5389...
 - USDC: 0x74b7f1...
-- Live Pool (USDC/WOKB, 5bps): 0x907210...
+- Competition Pool (OKB/USD₮0, AEGIS Hook): 0xd5a401...
 
 ---
 
@@ -185,31 +185,40 @@ RoundData created, agents registered
 Event: AgentRegistered(roundId, agent, vaultId)
 ```
 
-### Action Execution Phase
+### Action Execution Phase (Current MVP)
 
 ```
 Agent Decision Logic
       │
-      ├─→ detect trend
-      ├─→ calculate signal
-      └─→ decide action[]
+      ├─→ detect trend / calculate signal / decide action[]
+      │
+      └─→ submit to Relayer
 
-Arena.executeBatch(roundId, agent, actions[])
+Arena.executeBatch(roundId, agent, actions[]) [onlyRelayer]
       │
-      ├─→ validate round is active
-      ├─→ encode actions to calldata
-      ├─→ forward to AEGIS Router
-      │
-      ▼
-Router processes opcodes:
-  - 0x90: AE_MODIFY_LIQUIDITY
-  - 0x91: AE_MODIFY_DEBT
-  - 0x06-0x09: SWAP opcodes
-  - 0xC0: PM_TAKE (limit orders)
-      │
-      ▼
-Pool state updated, vault state updated
+      ├─→ validate round is active (block.timestamp < endTime)
+      ├─→ validate agent is registered in round
+      ├─→ accumulate snapshot: totalVolumeUsdc += actionCount * VOLUME_UNIT
+      ├─→ emit ActionsExecuted(roundId, agent, actions)
+      └─→ return (no on-chain forwarding to AEGIS Router)
 ```
+
+Note: Arena.executeBatch does NOT forward to AEGIS Router.
+Agents submit AEGIS Router transactions directly to the Router address.
+Arena.executeBatch is a scoring/audit record of actions taken.
+
+## Current vs. Target Architecture
+
+| Aspect | Current MVP | Post-Hackathon Target |
+|---|---|---|
+| Arena → AEGIS Router | Not connected. Arena records action batches; agents call Router directly. | Arena forwards opcodes to Router on-chain |
+| Bounty verification | On-chain via Arena.getSnapshots() oracle (CP-017+CP-018) | Full contract reads pool state directly; no server trigger |
+| Score assignment | Action-count proxy; owner triggers settle() | Contract computes real PnL scores at settlement |
+| Oracle for scoring | None — action count only | On-chain TWAP or keeper-validated snapshot |
+| executeBatch caller | Whitelisted relayer (onlyRelayer — CP-018) | Same |
+
+Everything labeled "Post-Hackathon Target" above is roadmap only.
+Do not present as current behavior to external audiences.
 
 ### Settlement Phase
 
@@ -608,8 +617,10 @@ All contracts are deployed and verified on X Layer (Chain ID 196). RPC: `https:/
 
 | Attribute | Value |
 |-----------|-------|
-| **USDC/WOKB (5 bps)** | `0x9072107b33ad70c231602b537d91774a43c1837f9b28040ee9bf8cad0a0ab4a1` |
-| **OKB/USD₮0 (Hackathon) — [View on Uniswap](https://app.uniswap.org/explore/pools/xlayer/0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4)** | `0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4` |
+| **USDC/WOKB (5 bps, legacy)** | `0x9072107b33ad70c231602b537d91774a43c1837f9b28040ee9bf8cad0a0ab4a1` |
+| **OKB/USD₮0 (Competition Pool) — [View on Uniswap](https://app.uniswap.org/explore/pools/xlayer/0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4)** | `0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4` |
+
+**Note:** `0x74b7f16337b8972027f6196a17a631ac6de26d22` (Circle USDC) is deployed on X Layer but is NOT the competition pool token. Competition pool uses USD₮0 (`0x779Ded0c9e1022225f8E0630b35a9b54bE713736`).
 
 **Competition Pool Details:**
 - **Token 0:** Native OKB (`0x0000000000000000000000000000000000000000`)

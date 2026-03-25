@@ -141,32 +141,52 @@ event ActionsExecuted(uint256 indexed roundId, address agent, bytes[] actions);
 
 ---
 
-## WOKB→USDC Conversion (FIX #4)
+## OKB→USD₮0 Conversion (Precision-Correct)
 
-The scoring uses the correct sqrtPriceX96 formula:
+Uniswap v4 stores prices as `sqrtPriceX96` — a 96-bit fixed-point number.
+Converting to a real price requires precision-preserving arithmetic.
+
+### Why naive formulas fail
+
+**`(sqrtPriceX96 / 2**96) ** 2`** — Integer division truncates `sqrtPriceX96 / 2^96` to 0
+for all realistic OKB prices. Result: always 0. **Do not use.**
+
+**`(sqrtPriceX96 ** 2) / 2**192`** — Mathematically correct but `sqrtPriceX96 ** 2`
+overflows `uint256` for large values (sqrtPriceX96 > ~2^128). **Unsafe without overflow check.**
+
+### Correct approach: FullMath.mulDiv (Solidity)
 
 ```solidity
-// Get pool price
-uint256 sqrtPriceX96 = pool.sqrtPrice;
+// Import from Uniswap v4 or v3-core
+import { FullMath } from "@uniswap/v4-core/src/libraries/FullMath.sol";
 
-// Convert: price = (sqrtPrice / 2^96)^2
-uint256 price = (sqrtPriceX96 / (2**96)) ** 2;
+// price = sqrtPriceX96^2 / 2^192
+// FullMath.mulDiv(a, b, c) computes (a * b) / c without overflow
+uint256 price = FullMath.mulDiv(sqrtPriceX96, sqrtPriceX96, 1 << 192);
 
-// Convert WOKB balance to USDC
-uint256 wokbBalance = ...; // from vault
-uint256 wokbValueUSDC = wokbBalance * price;
+// price is now: how many Token1 units per 1 Token0 unit
+// For OKB/USD₮0 pool: price = USD₮0 per OKB (6-decimal, scaled)
+uint256 wokbValueUSDC = FullMath.mulDiv(wokbBalance, price, 1e18);
 ```
 
-**Correct order:**
-1. Divide sqrtPrice by 2^96 first
-2. Square the result
-3. Multiply token balance by final price
+### TypeScript equivalent (BigInt scaled arithmetic)
 
-**Wrong approach (avoid):**
-```solidity
-// ❌ WRONG: Loses precision
-uint256 price = (sqrtPrice ** 2) / (2 ** 192);
+```typescript
+// Use BigInt throughout — no floating point
+const Q96 = 2n ** 96n;
+const SCALE = 10n ** 18n; // precision scale
+
+// sqrtPriceX96 from pool as bigint
+const price = (sqrtPriceX96 * sqrtPriceX96 * SCALE) / (Q96 * Q96);
+// price: USD₮0 per OKB (scaled by SCALE)
+
+const wokbValueUSDC = (wokbBalance * price) / SCALE;
+// wokbValueUSDC: in USD₮0 units (6 decimals)
 ```
+
+**Always verify**: for the live OKB/USD₮0 pool, Token0 is native OKB (18 decimals),
+Token1 is USD₮0 (6 decimals). Decimal adjustment is required when converting
+the raw `sqrtPriceX96` to a human-readable price.
 
 ---
 

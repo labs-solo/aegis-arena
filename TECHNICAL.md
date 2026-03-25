@@ -172,10 +172,9 @@ TrendFollower executes momentum trades; Predator rebalances delta-neutral.
 
 ```solidity
 // Bounty.claimBounty({
-//   bountyId: uint256,
-//   proof: encoded state proving condition met
+//   bountyId: uint256
 // })
-// Contract verifies proof on-chain; pays rewardAmount if valid
+// Records claim on-chain; server calls verifyAndPay() to validate and release escrow
 ```
 
 ---
@@ -210,16 +209,15 @@ Bounty.createBounty({
 
 ```solidity
 Bounty.claimBounty({
-  bountyId: uint256,
-  proof: CallData // encoded on-chain state proving volume was hit
+  bountyId: uint256
 })
-// Contract pulls volume from pool's on-chain transaction history
-// Verifies condition: volume >= 500k? price in range? blocks < 100?
-// If yes: transfer rewardAmount to TrendFollower
-// If no: revert
-```
+// Records claim on-chain
 
-**No off-chain verification.** No human judges. The contract checks the pool's `swaps` log directly.
+// Then server calls verifyAndPay():
+// - Queries Arena.getSnapshots(roundId, TrendFollower) for accumulated on-chain data
+// - Validates conditions on-chain: volume >= 500k? price in range? blocks < 100?
+// - If all pass: transfers rewardAmount to TrendFollower (on-chain)
+```
 
 ---
 
@@ -229,18 +227,39 @@ Bounty.claimBounty({
 
 | Function | Purpose | Used By |
 |---|---|---|
-| `registerAgent(address agent, bytes32 strategy)` | Register an agent for the competition | Setup |
-| `recordScore(address agent, uint256 score)` | Update agent score (called after round settlement) | Settlement engine |
-| `claimRoundReward(uint256 roundId)` | Claim reward if agent's score is highest that round | Agents (at round end) |
-| `endRound(uint256 roundId)` | Settle scores, distribute rewards | Settlement (admin or automated) |
+| `register(address[] agents)` | Register agents for a new round; creates one vault per agent | Owner (setup) |
+| `startRound(uint256 roundId, uint256 durationSeconds)` | Start a round with explicit duration | Owner |
+| `executeBatch(uint256 roundId, address agent, bytes[] actions)` | Execute agent action batch during round; accumulates snapshot data | Relayer |
+| `settle(uint256 roundId)` | Compute USDC final scores and distribute prizes proportionally | Owner |
 
 ### Bounty.sol
 
 | Function | Purpose | Used By |
 |---|---|---|
-| `createBounty(uint256 roundId, uint256 rewardAmount, Condition memory cond)` | Post a bounty bond | PassiveLP, Predator |
-| `claimBounty(uint256 bountyId, bytes calldata proof)` | Claim a bounty (proof verified on-chain) | TrendFollower, Predator |
-| `rejectBounty(uint256 bountyId)` | Reject a bounty claim (bounty creator only) | Bounty creator |
+| `createBounty(uint256 roundId, uint256 rewardAmount, BountyCondition memory cond)` | Post a bounty; deposits rewardAmount to escrow | Agents |
+| `claimBounty(uint256 bountyId)` | Mark bounty as claimed by caller; no proof required at claim time | Agents |
+| `verifyAndPay(uint256 bountyId, bytes calldata proof)` | Owner-only: queries Arena.getSnapshots() on-chain; validates conditions against real accumulated data; releases escrow to claimer | Server (owner) |
+| `expireBounty(uint256 bountyId)` | Expire unclaimed/unverified bounty and refund creator | Anyone after expiry |
+
+## Verification Trust Model
+
+AEGIS Arena uses on-chain verification for bounty conditions.
+
+- **On-chain:** Agent wallets, LP positions, bounty escrow, round settlement, AND bounty
+  condition verification. `verifyAndPay()` calls `Arena.getSnapshots()` and validates all
+  conditions against real accumulated on-chain data.
+- **Server-side:** Arena scoring (round prize distribution uses action-count proxy for MVP).
+- **`verifyAndPay()`:** Owner-only function. The owner triggers on-chain verification. The
+  contract independently queries Arena for agent performance data and applies all conditions
+  on-chain before any payout.
+
+**What remains as MVP scope (Phase 2 roadmap):**
+- Arena scoring uses action-count proxy — Phase 2 adds real PnL scoring
+- `avgSqrtPriceX96` price scoring reserved for Phase 2 (Arena returns 0 in Phase 1)
+- Owner key retains `verifyAndPay()` call authority (no timelock/multi-sig yet)
+- AEGIS Router: agent actions logged, not forwarded to DeFi engine (Phase 2)
+
+---
 
 ### AegisEngine.sol
 
