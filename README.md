@@ -34,7 +34,7 @@ We deployed three AI agents — a **PassiveLP**, a **TrendFollower**, and a **Pr
 |---|---|---|---|
 | 🟢 **PassiveLP** | Full-range LP, 0% leverage | **✅ LIVE** — earning fees + interest | 5.15 OKB + 441 USD₮0 |
 | 🟡 **TrendFollower** | Momentum + leverage | **✅ LIVE** — vault active, trading | 0.152 OKB + 786 USD₮0 |
-| 🔴 **Predator** | Liquidation hunter | **✅ LIVE** — delta-neutral hedge active | 9.51 OKB + 27 USD₮0 |
+| 🔵 **Predator** | Delta-neutral spread harvester | **✅ LIVE** — earning spread every block | 9.51 OKB + 27 USD₮0 |
 
 **[📈 View PassiveLP position →](./PASSIVE_LP_POSITION.md)**  
 **[🎮 Full game status & TXs →](./GAME_STATUS.md)**  
@@ -168,7 +168,7 @@ Arena.sol (Game Orchestrator)
 AEGIS Engine (PR #18: trail-of-bits-audit-fixes-and-improvements)
     ↓
 Uniswap v4 (X Layer)
-    └─ USDC/WOKB Pool (5 bps fee)
+    └─ OKB/USD₮0 Pool (AegisHook, dynamic fee)
 ```
 
 **See:** [`docs/specs/ARCHITECTURE.md`](docs/specs/ARCHITECTURE.md) for detailed system design.
@@ -200,13 +200,14 @@ Uniswap v4 (X Layer)
 | Contract | Address |
 |----------|---------|
 | **WOKB** | `0xe538905cf8410324e03A5A23C1c177a474D59b2b` |
-| **USDC** | `0x74b7f16337b8972027f6196a17a631ac6de26d22` |
-| **Pool (USDC/WOKB, 5bps)** | `0x9072107b33ad70c231602b537d91774a43c1837f9b28040ee9bf8cad0a0ab4a1` |
+| **USD₮0** | `0x779Ded0c9e1022225f8E0630b35a9b54bE713736` |
+| **Pool (OKB/USD₮0, AegisHook)** | `0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4` |
 
 ### Arena Contracts
-| Contract | Address |
-|----------|---------|
-| **Arena.sol** | `0x1e27EE1aa171845CE2523a867Fc5114318916d61` | [View on OKX Explorer](https://www.okx.com/explorer/xlayer/tx/0xd95991873a4d8713e14b8b188a9abdb3911a89710ddfbb735152e88556d06ad7) |
+| Contract | Address | Explorer |
+|----------|---------|---------|
+| **Arena.sol** | `0x1e27EE1aa171845CE2523a867Fc5114318916d61` | [View](https://www.okx.com/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61) |
+| **Bounty.sol** | `0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816` | [View](https://www.okx.com/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816) |
 
 ---
 
@@ -234,7 +235,7 @@ Three AI agents with radically different strategies are locked in live competiti
 ### 🛡️ PassiveLP — The Rent Collector
 > *"You're all trading. I'm collecting rent."*
 
-**The Strategy:** Passive full-range liquidity on OKB/USD₮0. Earns 0.05% swap fees regardless of market direction. Collects borrow interest when TrendFollower and Predator leverage. Already **LIVE** with 5.15 OKB + 441 USD₮0 deployed.
+**The Strategy:** Passive full-range liquidity on OKB/USD₮0. Earns 0.05% swap fees regardless of market direction. Collects borrow interest when TrendFollower and Predator leverage. Already **LIVE** with 5.15 OKB + 441 USD₮0 deployed. [View deposit TX →](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)
 
 **The Edge:** Doesn't need to predict direction. Only needs volume. While other agents wrestle with timing, PassiveLP collects rent from every swap, every borrow, every trade.
 
@@ -247,13 +248,13 @@ Three AI agents with radically different strategies are locked in live competiti
 ### 📈 TrendFollower — The Momentum Reader
 > *"The market tells me where it's going. I just listen better than everyone else."*
 
-**The Strategy:** Reads live OKX K-line data, computes SMA(20)/SMA(50) crossovers, enters leveraged positions (2–3x via AEGIS) on signal, exits on reversal. Clocks reaction time in blocks. **FUNDED** with 0.17 OKB + 800 USD₮0, position pending.
+**The Strategy:** Reads live OKX K-line data, computes SMA(20)/SMA(50) crossovers, enters leveraged positions (2–3x via AEGIS) on signal, exits on reversal. Clocks reaction time in blocks. **LIVE** with 0.152 OKB + 786 USD₮0 deployed. [View deposit TX →](https://www.okx.com/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006)
 
 **The Edge:** Speed + data. Fetches OKX K-lines 60+ times per minute (cached). Momentum signal crossing alert within 2 blocks. While other agents guess, TrendFollower *knows*.
 
 **The Bounty Play:** Doesn't create bounties; claims them. PassiveLP posts a volume bounty. TrendFollower's momentum signal is live. TrendFollower executes the same trades it would anyway, triggers the bounty, claims the reward. Free money on top of directional P&L. Also posts defensive bounties (pay for price stability) as leverage insurance.
 
-**Status:** ✅ **LIVE** — vault active, 0.152 OKB + 786 USD₮0 deployed, trading live
+**Status:** ✅ **LIVE** — vault active, trading on momentum signals
 
 ---
 
