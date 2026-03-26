@@ -67,24 +67,37 @@ TrendFollower doesn't create bounties; it *claims* them. PassiveLP posts a volum
 
 > *"You're worried about direction. I'm above it."*
 
-**The Edge:** Predator doesn't bet on where OKB goes. It builds a delta-neutral position — long exposure cancels short exposure — and just collects the spread in between. While PassiveLP earns on volume and TrendFollower earns on momentum, Predator earns on the *structural inefficiency* between borrow cost and fee yield. Market up, market down, sideways: Predator doesn't care.
+**The Edge:** Predator doesn't bet on where OKB goes. It builds a delta-neutral position — concentrated liquidity earning amplified fees, hedged with vault debt to cancel directional risk. While PassiveLP earns on broad volume and TrendFollower bets on momentum, Predator earns on the *structural inefficiency* between borrow cost and concentrated fee yield. Market up, market down, sideways: Predator doesn't care.
 
 **How It Executes:**
-1. **Enters delta-neutral** — long WOKB + LP USD₮0 on one side, short debt position on the other. Net directional exposure: near zero.
-2. **Earns the spread** — fee income from the LP leg (~160 USD₮0/round) exceeds borrow cost on the debt leg (~30 USD₮0/round). Net: ~+130 USD₮0 per round, unconditionally.
-3. **Rebalances when needed** — if one leg drifts from neutral, Predator trims back to center.
-4. **Monitors LTV across the arena** — when other agents over-leverage and approach their safety threshold, Predator evaluates whether claiming a distressed bounty (secondary) is worth more than staying neutral.
+1. **Concentrates liquidity** — CL Position NFT #2676, ticks [-231,900, -231,480] (~$85–$89, ±2.5% around current OKB). Every dollar of capital is actively earning fees, not spread across an infinite range.
+2. **Vault-funds everything** — CL position attached to Vault 5, idle reserves in vault, all managed through AEGIS Engine vault primitives.
+3. **Hedges via debt** — borrows against the CL position to cancel OKB directional exposure. Net unhedged OKB: ~0.045 (effectively zero). Fee income flows regardless of price direction.
+4. **Monitors LTV across the arena** — when other agents over-leverage and approach their safety threshold, Predator evaluates whether claiming a distressed bounty is worth more than staying neutral.
 
 **The Bounty Play:**
-Predator *posts* price-range bounties as cheap insurance: *"Pay 25 USD₮0 to keep OKB within 2% for 50 blocks."* Stabilizing the price protects Predator's LP leg from impermanent loss. The bounty is a hedge. It also *claims* high-value distressed bounties when they clear Predator's ROI threshold — but only when the math is better than staying put.
+Predator *posts* price-range bounties as cheap insurance: *"Pay 25 USD₮0 to keep OKB within 2% for 50 blocks."* Stabilizing the price protects Predator's CL position from moving out of range. The bounty is a hedge. It also *claims* high-value distressed bounties when they clear Predator's ROI threshold — but only when the math is better than staying put.
 
 **Right Now:**
-- **Status:** ✅ **LIVE** — vault active, 9.51 OKB + 27 USD₮0 deployed
-- **Deposit TX:** [0x24150952...](https://www.okx.com/explorer/xlayer/tx/0x241509528434c9d1bc5e570c72f84fd14a9274594e767b767eecc78ed9eed2ac)
-- **Stance:** Delta-neutral, earning spread every block
-- **Game Impact:** Consistent floor returns regardless of market conditions
+- **Status:** ✅ **LIVE** — vault-funded concentrated liquidity + debt hedge active
+- **CL Position:** NFT #2676, ticks [-231,900, -231,480] (±2.5% around current OKB price)
+- **Vault 5:** 0.080 OKB + 116.37 USDT₀ idle, borrowing at ~32.5% LTV
+- **Wallet:** 0.045 OKB (gas reserve only)
+- **Net OKB Exposure:** ~0.045 OKB (delta-neutral)
+- **Stance:** Delta-neutral, earning concentrated fees every block
 
-[🎮 **Join the leaderboard**](./GAME_STATUS.md)
+**Execution Proof (9 transactions, 32 minutes):**
+1. Engine approval: [`0x5040158a...`](https://www.okx.com/web3/explorer/xlayer/tx/0x5040158a8f03e1fac656f967fb0fd2c9e3aa1e2dfbfde97cd1b4000b1ca443fa) ✅
+2. PositionManager approval: [`0x1e585325...`](https://www.okx.com/web3/explorer/xlayer/tx/0x1e5853258e6574b6d4d11b15d05e10118ee464324af857fbfa424c789c263127) ✅
+3. VaultRegistry approval: [`0xd66e5af0...`](https://www.okx.com/web3/explorer/xlayer/tx/0xd66e5af02182041d512a2395c0161e379b7edde3d9d501be96972e2c9fcce3d8) ✅
+4. Redeem all ERC-6909 shares: [`0xeae8a04a...`](https://www.okx.com/web3/explorer/xlayer/tx/0xeae8a04a0e65e7c9cdc3754a8560c934aa3f85c66913b4028ff5815e3f723ee7) ✅
+5. Mint CL NFT #2676 + vault attach: [`0xe4614a69...`](https://www.okx.com/web3/explorer/xlayer/tx/0xe4614a69f6bab2e13ea1d45d9ce4f0ad3200959f9b059c2edddfc97160112a27) ✅
+6. Swap wallet OKB → USDT₀: [`0xc86ebd7a...`](https://www.okx.com/web3/explorer/xlayer/tx/0xc86ebd7a8d73a7914cd69aef3de28d8114860d36f969b7450384e30e7bad06d6) ✅
+7. Deposit tokens → vault idle: [`0x00ccdab9...`](https://www.okx.com/web3/explorer/xlayer/tx/0x00ccdab97f49dde44eceeba1ff659bd8ffaf9b7b24dceb0b3b95dcdca4d74cf7) ✅
+8. Borrow (debt hedge): [`0x921bb0f0...`](https://www.okx.com/web3/explorer/xlayer/tx/0x921bb0f06f7d303737c4c2d7ae244fce891f0020c21649c897b6e747047e5b2b) ✅
+9. In-vault OKB → USDT₀ swap: [`0xcfbe1fb7...`](https://www.okx.com/web3/explorer/xlayer/tx/0xcfbe1fb732a58de456b6370ab37c9390b475f61dbcb8ff580cd250705e975b15) ✅
+
+[📖 **Read the full story →**](./docs/PREDATOR-STORY.md) | [🎮 **Join the leaderboard**](./GAME_STATUS.md)
 
 ---
 
