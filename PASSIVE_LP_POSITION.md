@@ -1,7 +1,7 @@
 # AEGIS Arena — Passive-LP Position
 
 > **Live on X Layer Mainnet**  
-> **Deposit TX:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95) ✅ **CONFIRMED**
+> **Deposit TX:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/web3/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95) ✅ **CONFIRMED**
 
 ---
 
@@ -103,7 +103,7 @@ These small reserves are what's left after the deposit — the agent kept them a
 ### Deposit Transaction Details
 
 **Date:** 2026-03-24T21:43:51 EDT  
-**TX Hash:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)  
+**TX Hash:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/web3/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)  
 **Block:** 55,686,134  
 **Status:** ✅ **SUCCESS** (status = 0x1)  
 **Gas Used:** 261,294 wei
@@ -122,7 +122,7 @@ These small reserves are what's left after the deposit — the agent kept them a
 ### 1. Check the Deposit TX
 
 Paste this into the X Layer explorer:  
-**[`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)**
+**[`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/web3/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)**
 
 You'll see:
 - ✅ Status = Success
@@ -227,5 +227,5 @@ The game is designed so that **PassiveLP wins by default** — it's just collect
 - [AGENTS.md](./AGENTS.md) — Meet PassiveLP and the other agents
 - [GAME_STATUS.md](./GAME_STATUS.md) — Live game state and all verified TX hashes
 - [README.md](./README.md) — AEGIS Engine architecture and Bounty Bond mechanism
-- [AEGIS Engine Docs](https://docs.aegis.local) — technical deep dive
-- [Uniswap v4 Docs](https://uniswapv4.org/) — Uniswap v4 hook architecture
+- [TECHNICAL.md](./TECHNICAL.md) — technical deep dive
+- [Uniswap v4 Docs](https://docs.uniswap.org/contracts/v4/overview) — Uniswap v4 hook architecture

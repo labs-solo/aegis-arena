@@ -1,6 +1,6 @@
 # AEGIS Arena — Live Game Status
 
-> Fail-closed note: this status file includes live deployment references, but the repo code on `real-gameplay` still contains stubbed Arena settlement/snapshot behavior and owner-decoded bounty proof verification. Treat gameplay implementation status as incomplete until the staged work in [docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md](/Users/page/Page/repos/aegis-arena/docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md) is finished.
+> Fail-closed note: this status file includes live deployment references, but the repo code on `real-gameplay` still contains stubbed Arena settlement/snapshot behavior and owner-decoded bounty proof verification. Treat gameplay implementation status as incomplete until the staged work in [docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md](./docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md) is finished.
 
 > **Last updated:** 2026-03-24 22:02 EDT  
 > **Chain:** X Layer Mainnet (Chain ID: 196)
@@ -34,23 +34,23 @@ This is not a simulation. Every transaction hash below is confirmed on X Layer m
 
 | Contract | Address | TX | Status |
 |---|---|---|---|
-| Arena.sol | `0x1e27EE1aa171845CE2523a867Fc5114318916d61` | [View](https://www.okx.com/explorer/xlayer/tx/0xd95991873a4d8713e14b8b188a9abdb3911a89710ddfbb735152e88556d06ad7) | ✅ Live |
-| Bounty.sol | `0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816` | [View](https://www.okx.com/explorer/xlayer/tx/0x3921546eb3535291d6cd9892132f69dc48e91938c592c8f64e1dbf9a69ee454d) | ✅ Live |
+| Arena.sol | `0x1e27EE1aa171845CE2523a867Fc5114318916d61` | [View](https://www.okx.com/web3/explorer/xlayer/tx/0xd95991873a4d8713e14b8b188a9abdb3911a89710ddfbb735152e88556d06ad7) | ✅ Live |
+| Bounty.sol | `0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816` | [View](https://www.okx.com/web3/explorer/xlayer/tx/0x3921546eb3535291d6cd9892132f69dc48e91938c592c8f64e1dbf9a69ee454d) | ✅ Live |
 
 ### Agent Registration
 
-**TX:** [`0x9e8536b58be5034ae2254e2543558794f6b8721c141d9675863af1db56709d25`](https://www.okx.com/explorer/xlayer/tx/0x9e8536b58be5034ae2254e2543558794f6b8721c141d9675863af1db56709d25)  
+**TX:** [`0x9e8536b58be5034ae2254e2543558794f6b8721c141d9675863af1db56709d25`](https://www.okx.com/web3/explorer/xlayer/tx/0x9e8536b58be5034ae2254e2543558794f6b8721c141d9675863af1db56709d25)  
 **Block:** 55,635,031 | **Status:** ✅ Confirmed
 
 | Agent | Address | Role | Status |
 |---|---|---|---|
 | PassiveLP | `0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02` | Full-range LP | ✅ Active (LP deployed) |
-| TrendFollower | `0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1` | Trend trading | ✅ LIVE — vault active, 0.152 OKB + 786 USD₮0 deployed ([TX](https://www.okx.com/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006)) |
-| Predator | `0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D` | Delta-neutral market making | ✅ LIVE — vault active, 9.51 OKB + 27 USD₮0 deployed ([TX](https://www.okx.com/explorer/xlayer/tx/0x241509528434c9d1bc5e570c72f84fd14a9274594e767b767eecc78ed9eed2ac)) |
+| TrendFollower | `0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1` | Trend trading | ✅ LIVE — vault active, 0.152 OKB + 786 USD₮0 deployed ([TX](https://www.okx.com/web3/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006)) |
+| Predator | `0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D` | Delta-neutral market making | ✅ LIVE — vault active, 9.51 OKB + 27 USD₮0 deployed ([TX](https://www.okx.com/web3/explorer/xlayer/tx/0x241509528434c9d1bc5e570c72f84fd14a9274594e767b767eecc78ed9eed2ac)) |
 
 ### PassiveLP — Live LP Position
 
-**TX:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)  
+**TX:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/web3/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)  
 **Block:** 55,686,134 | **Status:** ✅ Confirmed
 
 | Field | Value |
@@ -91,19 +91,19 @@ cast call 0x76Fd297e2D437cd7f76d50F01AfE6160f86e9990 \
 
 | Time (EDT) | Event | TX |
 |---|---|---|
-| 2026-03-24 ~20:20 | Arena + Bounty deployed | [`0xd959...`](https://www.okx.com/explorer/xlayer/tx/0xd95991873a4d8713e14b8b188a9abdb3911a89710ddfbb735152e88556d06ad7) + [`0x3921...`](https://www.okx.com/explorer/xlayer/tx/0x3921546eb3535291d6cd9892132f69dc48e91938c592c8f64e1dbf9a69ee454d) |
+| 2026-03-24 ~20:20 | Arena + Bounty deployed | [`0xd959...`](https://www.okx.com/web3/explorer/xlayer/tx/0xd95991873a4d8713e14b8b188a9abdb3911a89710ddfbb735152e88556d06ad7) + [`0x3921...`](https://www.okx.com/web3/explorer/xlayer/tx/0x3921546eb3535291d6cd9892132f69dc48e91938c592c8f64e1dbf9a69ee454d) |
 | 2026-03-24 ~21:09 | PassiveLP wallet funded (OKB + USD₮0) | — |
-| 2026-03-24 ~21:26 | Full-range LP deposited to AegisEngine | [`0x6aef90e9...`](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95) |
-| 2026-03-24 ~22:00 | All 3 agents registered with Arena | [`0x9e8536b5...`](https://www.okx.com/explorer/xlayer/tx/0x9e8536b58be5034ae2254e2543558794f6b8721c141d9675863af1db56709d25) |
-| 2026-03-24 22:23 | TrendFollower OKB transferred | [`0x5180b0...`](https://www.okx.com/explorer/xlayer/tx/0x5180b014970d3eab75d87dbae613e78c61e8dc4968ef12532a1ff3adb4e25a43) |
-| 2026-03-24 22:23 | TrendFollower USD₮0 transferred | [`0x1143f2...`](https://www.okx.com/explorer/xlayer/tx/0x1143f2f96cefdb2cdddd9d8a60fcabe196907c487818a85d8f40429bd5094e23) |
-| 2026-03-24 22:23 | TrendFollower Permit2 setup (2 TXs) | [`0x6374...`](https://www.okx.com/explorer/xlayer/tx/0x63748bd5668709d0c9750b2ba301b17bb9fa11abf514eca1d6becc515d1a1e78) + [`0xd1bf...`](https://www.okx.com/explorer/xlayer/tx/0xd1bff6bb402b8c622f219d6f8a16f20f7cce7ce80e3943d0c96f2906928e77de) |
+| 2026-03-24 ~21:26 | Full-range LP deposited to AegisEngine | [`0x6aef90e9...`](https://www.okx.com/web3/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95) |
+| 2026-03-24 ~22:00 | All 3 agents registered with Arena | [`0x9e8536b5...`](https://www.okx.com/web3/explorer/xlayer/tx/0x9e8536b58be5034ae2254e2543558794f6b8721c141d9675863af1db56709d25) |
+| 2026-03-24 22:23 | TrendFollower OKB transferred | [`0x5180b0...`](https://www.okx.com/web3/explorer/xlayer/tx/0x5180b014970d3eab75d87dbae613e78c61e8dc4968ef12532a1ff3adb4e25a43) |
+| 2026-03-24 22:23 | TrendFollower USD₮0 transferred | [`0x1143f2...`](https://www.okx.com/web3/explorer/xlayer/tx/0x1143f2f96cefdb2cdddd9d8a60fcabe196907c487818a85d8f40429bd5094e23) |
+| 2026-03-24 22:23 | TrendFollower Permit2 setup (2 TXs) | [`0x6374...`](https://www.okx.com/web3/explorer/xlayer/tx/0x63748bd5668709d0c9750b2ba301b17bb9fa11abf514eca1d6becc515d1a1e78) + [`0xd1bf...`](https://www.okx.com/web3/explorer/xlayer/tx/0xd1bff6bb402b8c622f219d6f8a16f20f7cce7ce80e3943d0c96f2906928e77de) |
 | 2026-03-24 22:24 | TrendFollower vault deposit attempts (initial iterations) | Diagnostic phase; resolved in next iteration |
-| 2026-03-24 22:42 | Predator OKB transferred (9.51) | [`0x29060e1e...`](https://www.okx.com/explorer/xlayer/tx/0x29060e1e8921a04206b454dc087c4c1b50526436013efc68140dbf86a29d604d) |
-| 2026-03-24 22:42 | Predator USD₮0 transferred (27.52) | [`0xa9a8c6e1...`](https://www.okx.com/explorer/xlayer/tx/0xa9a8c6e1db2858d94e6bfa1f0da18a7626e046bed3e8f1badefd8003cb7a7fc0) |
-| 2026-03-24 22:42 | Predator Permit2 setup (2 TXs) | [`0xae532cf5...`](https://www.okx.com/explorer/xlayer/tx/0xae532cf59e2d83b23e3a738542420a1381054d090431d6daa82bfb7f332954e4) + [`0x343ae274...`](https://www.okx.com/explorer/xlayer/tx/0x343ae27427864acfbe4b0b6e1738889ee8226ad6be75b4535e1aa52744b8edb9) |
-| 2026-03-24 22:43 | TrendFollower vault deposit (**CONFIRMED**) | [`0x7cfe18cb...`](https://www.okx.com/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006) |
-| 2026-03-24 22:44 | Predator vault deposit (**CONFIRMED**) | [`0x24150952...`](https://www.okx.com/explorer/xlayer/tx/0x241509528434c9d1bc5e570c72f84fd14a9274594e767b767eecc78ed9eed2ac) |
+| 2026-03-24 22:42 | Predator OKB transferred (9.51) | [`0x29060e1e...`](https://www.okx.com/web3/explorer/xlayer/tx/0x29060e1e8921a04206b454dc087c4c1b50526436013efc68140dbf86a29d604d) |
+| 2026-03-24 22:42 | Predator USD₮0 transferred (27.52) | [`0xa9a8c6e1...`](https://www.okx.com/web3/explorer/xlayer/tx/0xa9a8c6e1db2858d94e6bfa1f0da18a7626e046bed3e8f1badefd8003cb7a7fc0) |
+| 2026-03-24 22:42 | Predator Permit2 setup (2 TXs) | [`0xae532cf5...`](https://www.okx.com/web3/explorer/xlayer/tx/0xae532cf59e2d83b23e3a738542420a1381054d090431d6daa82bfb7f332954e4) + [`0x343ae274...`](https://www.okx.com/web3/explorer/xlayer/tx/0x343ae27427864acfbe4b0b6e1738889ee8226ad6be75b4535e1aa52744b8edb9) |
+| 2026-03-24 22:43 | TrendFollower vault deposit (**CONFIRMED**) | [`0x7cfe18cb...`](https://www.okx.com/web3/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006) |
+| 2026-03-24 22:44 | Predator vault deposit (**CONFIRMED**) | [`0x24150952...`](https://www.okx.com/web3/explorer/xlayer/tx/0x241509528434c9d1bc5e570c72f84fd14a9274594e767b767eecc78ed9eed2ac) |
 | 2026-03-24 22:45+ | Game round started — all agents LIVE | All three agents competing |
 | 2026-03-24 22:45+ | Agents compete, settlement in progress | Real-time on-chain |
 
@@ -145,8 +145,8 @@ The deposit now flows: OKB deposited as collateral → USDT0 deposited as collat
 
 | Agent | Deposit TX | Deposited |
 |---|---|---|
-| PassiveLP | [0x6aef90e9...](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95) | 5.15 OKB + 441 USD₮0 |
-| TrendFollower | [0x7cfe18cb...](https://www.okx.com/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006) | 0.152 OKB + 786 USD₮0 |
-| Predator | [0x24150952...](https://www.okx.com/explorer/xlayer/tx/0x241509528434c9d1bc5e570c72f84fd14a9274594e767b767eecc78ed9eed2ac) | 9.51 OKB + 27 USD₮0 |
+| PassiveLP | [0x6aef90e9...](https://www.okx.com/web3/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95) | 5.15 OKB + 441 USD₮0 |
+| TrendFollower | [0x7cfe18cb...](https://www.okx.com/web3/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006) | 0.152 OKB + 786 USD₮0 |
+| Predator | [0x24150952...](https://www.okx.com/web3/explorer/xlayer/tx/0x241509528434c9d1bc5e570c72f84fd14a9274594e767b767eecc78ed9eed2ac) | 9.51 OKB + 27 USD₮0 |
 
 **The game is live. All agents have active vault positions on X Layer mainnet.**

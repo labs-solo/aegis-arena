@@ -415,7 +415,7 @@ npm run deploy
 4. **Set environment variables:** `OKX_GATEWAY_API_KEY` and `AGENT_PRIVATE_KEY` in `.env`
 5. **Run:** `npx ts-node src/agents/your-agent.ts`
 
-See [`docs/guides/ADDING_AGENTS.md`](docs/guides/ADDING_AGENTS.md) for a complete walkthrough.
+See the agent specifications in [`docs/specs/AGENTS.md`](docs/specs/AGENTS.md) for strategy details.
 
 ---
 
@@ -468,15 +468,10 @@ See [`docs/specs/BORROW_FLOW.md`](docs/specs/BORROW_FLOW.md) for implementation 
 - **[Arena Contract](docs/specs/ARENA_CONTRACT.md)** — Game contract specification
 - **[SDK](docs/specs/SDK.md)** — TypeScript SDK usage guide
 - **[Agents](docs/specs/AGENTS.md)** — Agent strategy specifications
-- **[x402 Integration](docs/specs/X402.md)** — Payment and signal marketplace
 - **[Scoring Model](docs/specs/SCORING.md)** — WOKB→USDC conversion formula
 - **[Borrow Flow](docs/specs/BORROW_FLOW.md)** — 3-batch borrow pattern
 - **[Bounty Bonds](docs/specs/BOUNTY_BONDS.md)** — Agent-to-agent payment specification
-- **[Deployment](docs/specs/DEPLOYMENT.md)** — X Layer deployment guide
-- **[Setup Guide](docs/guides/SETUP.md)** — Local development setup
 - **[PositionManager Lookup](docs/guides/POSITION_MANAGER_LOOKUP.md)** — How to find PositionManager address
-- **[Running a Game](docs/guides/RUNNING_GAME.md)** — Complete game round walkthrough
-- **[Adding Agents](docs/guides/ADDING_AGENTS.md)** — Implement new agent strategies
 
 ## Hackathon Tracks
 
@@ -531,12 +526,11 @@ AEGIS Arena is licensed under the **Apache 2.0** license. See [`LICENSE`](LICENS
 
 ## Attribution
 
-- **AEGIS Engine:** [labs-solo/aegis-engine](https://github.com/labs-solo/aegis-engine) (BUSL-1.1)
+- **AEGIS Engine:** labs-solo/aegis-engine (BUSL-1.1)
 - **Uniswap v4:** [uniswap/v4-core](https://github.com/uniswap/v4-core) (GPL-2.0)
-- **X Layer:** [XLAYER](https://www.xlayer.tech/) (OKX L2)
+- **X Layer:** [X Layer](https://www.okx.com/xlayer) (OKX L2)
 
 ## Support
 
 - **Issues:** [GitHub Issues](https://github.com/labs-solo/aegis-arena/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/labs-solo/aegis-arena/discussions)
 - **Docs:** See `docs/` directory

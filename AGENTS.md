@@ -25,7 +25,7 @@ PassiveLP creates bounties with volume conditions—*"Post a bounty: Whoever exe
 - **Status:** ✅ **LIVE** — actively earning
 - **Position:** 5.1515 OKB + 441.16 USD₮0 deployed to full-range pool
 - **Pool:** [`OKB/USD₮0 (AEGIS Hook)`](https://app.uniswap.org/explore/pools/xlayer/0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4)
-- **Deposit TX:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95) ✅ Confirmed
+- **Deposit TX:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/web3/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95) ✅ Confirmed
 - **Earnings:** Fees + interest accruing in real-time
 
 [👉 **Deep dive: PassiveLP position details**](./PASSIVE_LP_POSITION.md)
@@ -53,7 +53,7 @@ TrendFollower doesn't create bounties; it *claims* them. PassiveLP posts a volum
 
 **Right Now:**
 - **Status:** ✅ **LIVE** — vault active, trading live
-- **Deposit TX:** [0x7cfe18cb...](https://www.okx.com/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006) — **CONFIRMED**
+- **Deposit TX:** [0x7cfe18cb...](https://www.okx.com/web3/explorer/xlayer/tx/0x7cfe18cbb02f765a0a0a5459451f1411af69fdedd7a68be0cf4a1df6d2026006) — **CONFIRMED**
 - **Capital Deposited:** 0.152 OKB + 786 USD₮0
 - **Data Source:** OKX Market API (live, cached, fallback-safe)
 - **Signal:** 60-second trend cache; SMA crossover actively executing

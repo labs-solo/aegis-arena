@@ -20,28 +20,28 @@ This plan defines the minimum coherent implementation needed to move `aegis-aren
 
 ### Contracts
 
-- [`contracts/Arena.sol`](/Users/page/Page/repos/aegis-arena/contracts/Arena.sol) `register()` now binds orchestrator-provided vault IDs and rejects zero, duplicate-agent, and duplicate-vault inputs; it still does not create vaults itself.
-- [`src/sdk/vault-validator.ts`](/Users/page/Page/repos/aegis-arena/src/sdk/vault-validator.ts) adds the first truthful validation layer for supplied vault IDs: configured allowlists plus a best-effort `VaultRegistry.ownerOf()` probe when a readable registry/provider is configured.
-- [`src/sdk/arena.ts`](/Users/page/Page/repos/aegis-arena/src/sdk/arena.ts) reads authoritative agent-to-vault bindings from Arena and performs the registration write after validation.
-- [`src/server/routes/agent-actions.ts`](/Users/page/Page/repos/aegis-arena/src/server/routes/agent-actions.ts) exposes `POST /api/agent/register` and `GET /api/agent/bindings/*` for orchestrator-owned registration and binding reads when Arena/RPC config is present.
-- [`contracts/Arena.sol`](/Users/page/Page/repos/aegis-arena/contracts/Arena.sol) `executeBatch()` only validates round/agent membership and emits `ActionsExecuted`; it does not forward actions to AEGIS Router or persist execution results.
-- [`contracts/Arena.sol`](/Users/page/Page/repos/aegis-arena/contracts/Arena.sol) `settle()` assigns mock descending scores and mock prizes.
-- [`contracts/Arena.sol`](/Users/page/Page/repos/aegis-arena/contracts/Arena.sol) `getSnapshots()` and `getSnapshotTimestamps()` are stubs returning mock data.
-- [`contracts/IArena.sol`](/Users/page/Page/repos/aegis-arena/contracts/IArena.sol) does not expose the snapshot methods that exist on `Arena.sol`, so the public contract surface is already drifting from the implementation.
-- [`contracts/Bounty.sol`](/Users/page/Page/repos/aegis-arena/contracts/Bounty.sol) `verifyAndPay()` trusts owner-supplied `snapshotProof` bytes decoded by `_decodeAndValidateSnapshot()` rather than verifying an Arena-backed snapshot or attestation.
+- [`contracts/Arena.sol`](../../contracts/Arena.sol) `register()` now binds orchestrator-provided vault IDs and rejects zero, duplicate-agent, and duplicate-vault inputs; it still does not create vaults itself.
+- [`src/sdk/vault-validator.ts`](../../src/sdk/vault-validator.ts) adds the first truthful validation layer for supplied vault IDs: configured allowlists plus a best-effort `VaultRegistry.ownerOf()` probe when a readable registry/provider is configured.
+- [`src/sdk/arena.ts`](../../src/sdk/arena.ts) reads authoritative agent-to-vault bindings from Arena and performs the registration write after validation.
+- [`src/server/routes/agent-actions.ts`](../../src/server/routes/agent-actions.ts) exposes `POST /api/agent/register` and `GET /api/agent/bindings/*` for orchestrator-owned registration and binding reads when Arena/RPC config is present.
+- [`contracts/Arena.sol`](../../contracts/Arena.sol) `executeBatch()` only validates round/agent membership and emits `ActionsExecuted`; it does not forward actions to AEGIS Router or persist execution results.
+- [`contracts/Arena.sol`](../../contracts/Arena.sol) `settle()` assigns mock descending scores and mock prizes.
+- [`contracts/Arena.sol`](../../contracts/Arena.sol) `getSnapshots()` and `getSnapshotTimestamps()` are stubs returning mock data.
+- [`contracts/IArena.sol`](../../contracts/IArena.sol) does not expose the snapshot methods that exist on `Arena.sol`, so the public contract surface is already drifting from the implementation.
+- [`contracts/Bounty.sol`](../../contracts/Bounty.sol) `verifyAndPay()` trusts owner-supplied `snapshotProof` bytes decoded by `_decodeAndValidateSnapshot()` rather than verifying an Arena-backed snapshot or attestation.
 
 ### Server / Orchestrator / Runtime
 
-- [`src/server/routes/agent-actions.ts`](/Users/page/Page/repos/aegis-arena/src/server/routes/agent-actions.ts) still returns mock tx hashes for `executeBatch()` submission, but registration now has a real Arena write path when the deployer-owned signer is configured.
-- [`src/server/routes/bounties.ts`](/Users/page/Page/repos/aegis-arena/src/server/routes/bounties.ts) lists mock bounties, accepts claims without contract submission, and treats `/verify` as a server-side proof decoding endpoint.
-- [`src/server/index.ts`](/Users/page/Page/repos/aegis-arena/src/server/index.ts) serves mock game state and mock scores.
-- [`src/agents/base-agent.ts`](/Users/page/Page/repos/aegis-arena/src/agents/base-agent.ts) now encodes `Arena.executeBatch(roundId, agent, actions)` calldata after a registered vault ID is bound, but direct execution and tx signing/submission are still placeholders.
+- [`src/server/routes/agent-actions.ts`](../../src/server/routes/agent-actions.ts) still returns mock tx hashes for `executeBatch()` submission, but registration now has a real Arena write path when the deployer-owned signer is configured.
+- [`src/server/routes/bounties.ts`](../../src/server/routes/bounties.ts) lists mock bounties, accepts claims without contract submission, and treats `/verify` as a server-side proof decoding endpoint.
+- [`src/server/index.ts`](../../src/server/index.ts) serves mock game state and mock scores.
+- [`src/agents/base-agent.ts`](../../src/agents/base-agent.ts) now encodes `Arena.executeBatch(roundId, agent, actions)` calldata after a registered vault ID is bound, but direct execution and tx signing/submission are still placeholders.
 
 ### Owner / Deployer Wiring
 
-- [`contracts/Arena.sol`](/Users/page/Page/repos/aegis-arena/contracts/Arena.sol) and [`contracts/Bounty.sol`](/Users/page/Page/repos/aegis-arena/contracts/Bounty.sol) both default `owner = msg.sender` at deployment.
-- [`contracts/script/DeployArena.s.sol`](/Users/page/Page/repos/aegis-arena/contracts/script/DeployArena.s.sol) deploys `Arena` from `ORCHESTRATOR_PRIVATE_KEY`.
-- [`deploy/addresses.json`](/Users/page/Page/repos/aegis-arena/deploy/addresses.json) records a `deployedBy` address that should be treated as the default non-agent owner/deployer authority. Agent wallets must not be assumed to own Arena/Bounty unless explicitly configured otherwise.
+- [`contracts/Arena.sol`](../../contracts/Arena.sol) and [`contracts/Bounty.sol`](../../contracts/Bounty.sol) both default `owner = msg.sender` at deployment.
+- [`contracts/script/DeployArena.s.sol`](../../contracts/script/DeployArena.s.sol) deploys `Arena` from `ORCHESTRATOR_PRIVATE_KEY`.
+- [`deploy/addresses.json`](../../deploy/addresses.json) records a `deployedBy` address that should be treated as the default non-agent owner/deployer authority. Agent wallets must not be assumed to own Arena/Bounty unless explicitly configured otherwise.
 
 ## Minimum Coherent Implementation Set
 
@@ -58,12 +58,12 @@ The next execution agent should treat the following as one slice. Partial implem
 ### Stage 1: Lock Down Contract Interfaces and Authority
 
 Files:
-- [`contracts/IArena.sol`](/Users/page/Page/repos/aegis-arena/contracts/IArena.sol)
-- [`contracts/Arena.sol`](/Users/page/Page/repos/aegis-arena/contracts/Arena.sol)
-- [`contracts/Bounty.sol`](/Users/page/Page/repos/aegis-arena/contracts/Bounty.sol)
-- [`contracts/interfaces/IBounty.sol`](/Users/page/Page/repos/aegis-arena/contracts/interfaces/IBounty.sol)
-- [`contracts/script/DeployArena.s.sol`](/Users/page/Page/repos/aegis-arena/contracts/script/DeployArena.s.sol)
-- [`deploy/addresses.json`](/Users/page/Page/repos/aegis-arena/deploy/addresses.json)
+- [`contracts/IArena.sol`](../../contracts/IArena.sol)
+- [`contracts/Arena.sol`](../../contracts/Arena.sol)
+- [`contracts/Bounty.sol`](../../contracts/Bounty.sol)
+- [`contracts/interfaces/IBounty.sol`](../../contracts/interfaces/IBounty.sol)
+- [`contracts/script/DeployArena.s.sol`](../../contracts/script/DeployArena.s.sol)
+- [`deploy/addresses.json`](../../deploy/addresses.json)
 
 Required changes:
 - Expose the actual Arena snapshot/query surface in `IArena.sol`, or remove public claims that the interface supports snapshot-backed bounty verification until it does.
@@ -77,10 +77,10 @@ Acceptance condition:
 ### Stage 2: Replace Synthetic Vault IDs With Real Vault Binding
 
 Files:
-- [`contracts/Arena.sol`](/Users/page/Page/repos/aegis-arena/contracts/Arena.sol)
-- [`contracts/AegisDeployConfig.sol`](/Users/page/Page/repos/aegis-arena/contracts/AegisDeployConfig.sol)
-- [`src/agents/base-agent.ts`](/Users/page/Page/repos/aegis-arena/src/agents/base-agent.ts)
-- [`src/server/routes/agent-actions.ts`](/Users/page/Page/repos/aegis-arena/src/server/routes/agent-actions.ts)
+- [`contracts/Arena.sol`](../../contracts/Arena.sol)
+- [`contracts/AegisDeployConfig.sol`](../../contracts/AegisDeployConfig.sol)
+- [`src/agents/base-agent.ts`](../../src/agents/base-agent.ts)
+- [`src/server/routes/agent-actions.ts`](../../src/server/routes/agent-actions.ts)
 
 Required contract changes:
 - Remove synthetic sequential vault ID assignment from `register()`.
@@ -99,11 +99,11 @@ Acceptance condition:
 ### Stage 3: Make `executeBatch()` a Real Submission Boundary
 
 Files:
-- [`contracts/Arena.sol`](/Users/page/Page/repos/aegis-arena/contracts/Arena.sol)
-- [`src/agents/base-agent.ts`](/Users/page/Page/repos/aegis-arena/src/agents/base-agent.ts)
-- [`src/server/routes/agent-actions.ts`](/Users/page/Page/repos/aegis-arena/src/server/routes/agent-actions.ts)
-- [`src/sdk/opcodes.ts`](/Users/page/Page/repos/aegis-arena/src/sdk/opcodes.ts)
-- [`src/sdk/router.ts`](/Users/page/Page/repos/aegis-arena/src/sdk/router.ts)
+- [`contracts/Arena.sol`](../../contracts/Arena.sol)
+- [`src/agents/base-agent.ts`](../../src/agents/base-agent.ts)
+- [`src/server/routes/agent-actions.ts`](../../src/server/routes/agent-actions.ts)
+- [`src/sdk/opcodes.ts`](../../src/sdk/opcodes.ts)
+- [`src/sdk/router.ts`](../../src/sdk/router.ts)
 
 Required contract changes:
 - Define what `actions` mean at the Arena boundary: raw router calldata, encoded opcodes, or a constrained Arena action format.
@@ -121,9 +121,9 @@ Acceptance condition:
 ### Stage 4: Replace Mock Settlement and Snapshot Stubs
 
 Files:
-- [`contracts/Arena.sol`](/Users/page/Page/repos/aegis-arena/contracts/Arena.sol)
-- [`docs/specs/SCORING.md`](/Users/page/Page/repos/aegis-arena/docs/specs/SCORING.md)
-- [`src/server/index.ts`](/Users/page/Page/repos/aegis-arena/src/server/index.ts)
+- [`contracts/Arena.sol`](../../contracts/Arena.sol)
+- [`docs/specs/SCORING.md`](../../docs/specs/SCORING.md)
+- [`src/server/index.ts`](../../src/server/index.ts)
 
 Required contract changes:
 - Implement a real settlement source of truth based on current vault holdings and the pool state actually referenced by the deployed market.
@@ -139,11 +139,11 @@ Acceptance condition:
 ### Stage 5: Make Bounty Verification Arena-Backed
 
 Files:
-- [`contracts/Bounty.sol`](/Users/page/Page/repos/aegis-arena/contracts/Bounty.sol)
-- [`contracts/IArena.sol`](/Users/page/Page/repos/aegis-arena/contracts/IArena.sol)
-- [`contracts/interfaces/IBounty.sol`](/Users/page/Page/repos/aegis-arena/contracts/interfaces/IBounty.sol)
-- [`src/server/routes/bounties.ts`](/Users/page/Page/repos/aegis-arena/src/server/routes/bounties.ts)
-- [`src/sdk/bounty.ts`](/Users/page/Page/repos/aegis-arena/src/sdk/bounty.ts)
+- [`contracts/Bounty.sol`](../../contracts/Bounty.sol)
+- [`contracts/IArena.sol`](../../contracts/IArena.sol)
+- [`contracts/interfaces/IBounty.sol`](../../contracts/interfaces/IBounty.sol)
+- [`src/server/routes/bounties.ts`](../../src/server/routes/bounties.ts)
+- [`src/sdk/bounty.ts`](../../src/sdk/bounty.ts)
 
 Required contract changes:
 - `verifyAndPay()` must stop trusting owner-provided `(volume, avgPrice)` bytes as proof.
@@ -162,12 +162,12 @@ Acceptance condition:
 ### Stage 6: Tests and Truthful Docs
 
 Files:
-- [`tests/contracts/bounty.test.ts`](/Users/page/Page/repos/aegis-arena/tests/contracts/bounty.test.ts)
-- [`tests/integration/bounty-flow.test.ts`](/Users/page/Page/repos/aegis-arena/tests/integration/bounty-flow.test.ts)
-- [`tests/integration/gateway-flow.test.ts`](/Users/page/Page/repos/aegis-arena/tests/integration/gateway-flow.test.ts)
-- [`README.md`](/Users/page/Page/repos/aegis-arena/README.md)
-- [`TECHNICAL.md`](/Users/page/Page/repos/aegis-arena/TECHNICAL.md)
-- [`GAME_STATUS.md`](/Users/page/Page/repos/aegis-arena/GAME_STATUS.md)
+- [`tests/contracts/bounty.test.ts`](../../tests/contracts/bounty.test.ts)
+- [`tests/integration/bounty-flow.test.ts`](../../tests/integration/bounty-flow.test.ts)
+- [`tests/integration/gateway-flow.test.ts`](../../tests/integration/gateway-flow.test.ts)
+- [`README.md`](../../README.md)
+- [`TECHNICAL.md`](../../TECHNICAL.md)
+- [`GAME_STATUS.md`](../../GAME_STATUS.md)
 
 Required changes:
 - Add tests that fail on synthetic vault IDs, mock settlement, mock snapshots, and owner-supplied proof bypasses.
@@ -178,7 +178,7 @@ Acceptance condition:
 
 ## Runtime Boundary
 
-This repo should own gameplay execution, contract integration, and public status docs. If CP-013 or related control-plane artifacts in `/Users/page/Page/repos/talos-runtime` are needed for wording or attestation format alignment, treat them as reference material only; do not make `aegis-arena` depend on `talos-runtime` for core gameplay verification.
+This repo should own gameplay execution, contract integration, and public status docs. If CP-013 or related control-plane artifacts in the `talos-runtime` repo are needed for wording or attestation format alignment, treat them as reference material only; do not make `aegis-arena` depend on `talos-runtime` for core gameplay verification.
 
 ## Suggested Execution Order
 

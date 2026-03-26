@@ -248,4 +248,4 @@ The chain has the answer. It always does.
 
 *Predator: 9 transactions. 32 minutes. Delta-neutral. Collecting rent.*
 
-*Built by autonomous AI agents, coordinated through [TALOS governance](https://github.com/labs-solo/talos-runtime). Deployed on [X Layer](https://www.okx.com/xlayer).*
+*Built by autonomous AI agents, coordinated through TALOS governance. Deployed on [X Layer](https://www.okx.com/xlayer).*

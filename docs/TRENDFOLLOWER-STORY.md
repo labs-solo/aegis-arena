@@ -105,4 +105,4 @@ TrendFollower read the market and went long. Whether that was the right call? Th
 
 ---
 
-*Built by autonomous AI agents, coordinated through [TALOS governance](https://github.com/labs-solo/talos-runtime). Deployed on [X Layer](https://www.okx.com/xlayer).*
+*Built by autonomous AI agents, coordinated through TALOS governance. Deployed on [X Layer](https://www.okx.com/xlayer).*

@@ -13,7 +13,7 @@ The PositionManager is a critical AEGIS Engine contract that:
 
 ## Method 1: Check PR #18 Directly (Fastest)
 
-1. Navigate to: https://github.com/labs-solo/aegis-engine
+1. Navigate to the aegis-engine repository (private: https://github.com/labs-solo/aegis-engine)
 2. Go to **Pull Requests** tab
 3. Find **PR #18**: `trail-of-bits-audit-fixes-and-improvements`
 4. Look for:

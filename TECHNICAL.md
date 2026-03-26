@@ -1,6 +1,6 @@
 # Technical Reference — AEGIS Arena
 
-> Fail-closed note: this file mixes deployed addresses with planned behavior. In the current repo, `Arena.register()` still assigns synthetic vault IDs, `executeBatch()` is event-only, settlement/snapshots are stubbed, and `Bounty.verifyAndPay()` still trusts owner-provided proof bytes. Implementation sequencing for the real-gameplay branch is tracked in [docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md](/Users/page/Page/repos/aegis-arena/docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md).
+> Fail-closed note: this file mixes deployed addresses with planned behavior. In the current repo, `Arena.register()` still assigns synthetic vault IDs, `executeBatch()` is event-only, settlement/snapshots are stubbed, and `Bounty.verifyAndPay()` still trusts owner-provided proof bytes. Implementation sequencing for the real-gameplay branch is tracked in [docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md](./docs/plans/REAL_GAMEPLAY_IMPLEMENTATION_PLAN.md).
 
 This document is for judges and developers who want to verify the on-chain reality of AEGIS Arena. **Everything here is live on X Layer mainnet (Chain 196) and verifiable in minutes.**
 
@@ -28,19 +28,19 @@ This document is for judges and developers who want to verify the on-chain reali
 
 | Contract | Address | Role | Deployment TX |
 |---|---|---|---|
-| **Arena.sol** | [`0x1e27EE1aa171845CE2523a867Fc5114318916d61`](https://www.okx.com/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61) | Agent registration, scoring, round settlement | [View](https://www.okx.com/explorer/xlayer/tx/0xd95991873a4d8713e14b8b188a9abdb3911a89710ddfbb735152e88556d06ad7) |
-| **Bounty.sol** | [`0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816`](https://www.okx.com/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816) | Bounty bond creation, condition verification, payout | [View](https://www.okx.com/explorer/xlayer/tx/0x3921546eb3535291d6cd9892132f69dc48e91938c592c8f64e1dbf9a69ee454d) |
-| **AegisEngine** | [`0x1b0ed1d21b5AB3Db311C1aC386DC874081914935`](https://www.okx.com/explorer/xlayer/address/0x1b0ed1d21b5AB3Db311C1aC386DC874081914935) | Vault management, borrowing, collateral tracking | — |
-| **AegisRouterV1** | [`0xb2830032E19A85e03cDE678FF93Da659C90CAFe5`](https://www.okx.com/explorer/xlayer/address/0xb2830032E19A85e03cDE678FF93Da659C90CAFe5) | Transaction routing, swap execution, deposit/withdrawal | — |
-| **AegisHook** | [`0xc54aC33a60BeED0c10C32D8E4434166AF68550cc`](https://www.okx.com/explorer/xlayer/address/0xc54aC33a60BeED0c10C32D8E4434166AF68550cc) | Uniswap v4 hook, dynamic fee logic | — |
+| **Arena.sol** | [`0x1e27EE1aa171845CE2523a867Fc5114318916d61`](https://www.okx.com/web3/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61) | Agent registration, scoring, round settlement | [View](https://www.okx.com/web3/explorer/xlayer/tx/0xd95991873a4d8713e14b8b188a9abdb3911a89710ddfbb735152e88556d06ad7) |
+| **Bounty.sol** | [`0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816`](https://www.okx.com/web3/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816) | Bounty bond creation, condition verification, payout | [View](https://www.okx.com/web3/explorer/xlayer/tx/0x3921546eb3535291d6cd9892132f69dc48e91938c592c8f64e1dbf9a69ee454d) |
+| **AegisEngine** | [`0x1b0ed1d21b5AB3Db311C1aC386DC874081914935`](https://www.okx.com/web3/explorer/xlayer/address/0x1b0ed1d21b5AB3Db311C1aC386DC874081914935) | Vault management, borrowing, collateral tracking | — |
+| **AegisRouterV1** | [`0xb2830032E19A85e03cDE678FF93Da659C90CAFe5`](https://www.okx.com/web3/explorer/xlayer/address/0xb2830032E19A85e03cDE678FF93Da659C90CAFe5) | Transaction routing, swap execution, deposit/withdrawal | — |
+| **AegisHook** | [`0xc54aC33a60BeED0c10C32D8E4434166AF68550cc`](https://www.okx.com/web3/explorer/xlayer/address/0xc54aC33a60BeED0c10C32D8E4434166AF68550cc) | Uniswap v4 hook, dynamic fee logic | — |
 
 ### Uniswap v4 Infrastructure
 
 | Contract | Address | Role |
 |---|---|---|
-| **PoolManager** | [`0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32`](https://www.okx.com/explorer/xlayer/address/0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32) | Uniswap v4 core (holds positions, manages liquidity) |
-| **StateView** | [`0x76Fd297e2D437cd7f76d50F01AfE6160f86e9990`](https://www.okx.com/explorer/xlayer/address/0x76Fd297e2D437cd7f76d50F01AfE6160f86e9990) | Read-only state queries for all vaults and pool metrics |
-| **Permit2** | [`0x000000000022D473030F116dDEE9F6B43aC78BA3`](https://www.okx.com/explorer/xlayer/address/0x000000000022D473030F116dDEE9F6B43aC78BA3) | ERC-20 token approval standard (universal) |
+| **PoolManager** | [`0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32`](https://www.okx.com/web3/explorer/xlayer/address/0x360e68faCcca8cA495c1B759Fd9EEe466db9FB32) | Uniswap v4 core (holds positions, manages liquidity) |
+| **StateView** | [`0x76Fd297e2D437cd7f76d50F01AfE6160f86e9990`](https://www.okx.com/web3/explorer/xlayer/address/0x76Fd297e2D437cd7f76d50F01AfE6160f86e9990) | Read-only state queries for all vaults and pool metrics |
+| **Permit2** | [`0x000000000022D473030F116dDEE9F6B43aC78BA3`](https://www.okx.com/web3/explorer/xlayer/address/0x000000000022D473030F116dDEE9F6B43aC78BA3) | ERC-20 token approval standard (universal) |
 
 ### Liquidity Pool
 
@@ -49,7 +49,7 @@ This document is for judges and developers who want to verify the on-chain reali
 | **Pool ID** | `0xd5a401023b6ee3ae340bfadb90758385dc9d2463a20dc24e43e913bc7f209cf4` |
 | **Token0** | WOKB (OKB native, wrapped) |
 | **Token1** | USD₮0 (Tether stablecoin on X Layer) |
-| **Pool Address** | [`0x779Ded0c9e1022225f8E0630b35a9b54bE713736`](https://www.okx.com/explorer/xlayer/address/0x779Ded0c9e1022225f8E0630b35a9b54bE713736) |
+| **Pool Address** | [`0x779Ded0c9e1022225f8E0630b35a9b54bE713736`](https://www.okx.com/web3/explorer/xlayer/address/0x779Ded0c9e1022225f8E0630b35a9b54bE713736) |
 | **Hook** | AegisHook (`0xc54aC33a60BeED0c10C32D8E4434166AF68550cc`) |
 | **Fee Model** | Dynamic (encoded in `feeFlags`); base 8,388,608 (adjusts on volatility via hook) |
 | **Tick Spacing** | 60 |
@@ -61,9 +61,9 @@ This document is for judges and developers who want to verify the on-chain reali
 
 | Agent | Address | Role | Capital Deployed |
 |---|---|---|---|
-| **PassiveLP** | [`0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02`](https://www.okx.com/explorer/xlayer/address/0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02) | Full-range LP provider | 5.1515 OKB + 441.16 USD₮0 |
-| **TrendFollower** | [`0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1`](https://www.okx.com/explorer/xlayer/address/0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1) | Momentum trader (leverage) | 0.17 OKB + 800 USD₮0 |
-| **Predator** | [`0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D`](https://www.okx.com/explorer/xlayer/address/0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D) | Delta-neutral spread harvester | 10.5+ OKB + 27 USD₮0 |
+| **PassiveLP** | [`0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02`](https://www.okx.com/web3/explorer/xlayer/address/0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02) | Full-range LP provider | 5.1515 OKB + 441.16 USD₮0 |
+| **TrendFollower** | [`0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1`](https://www.okx.com/web3/explorer/xlayer/address/0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1) | Momentum trader (leverage) | 0.17 OKB + 800 USD₮0 |
+| **Predator** | [`0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D`](https://www.okx.com/web3/explorer/xlayer/address/0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D) | Delta-neutral spread harvester | 10.5+ OKB + 27 USD₮0 |
 
 ---
 
@@ -123,8 +123,8 @@ Agents must authorize the router to spend their tokens via Permit2 (the standard
 ```
 
 **TrendFollower Permit2 TXs:**
-- WOKB: [`0x63748bd5668709d0c9750b2ba301b17bb9fa11abf514eca1d6becc515d1a1e78`](https://www.okx.com/explorer/xlayer/tx/0x63748bd5668709d0c9750b2ba301b17bb9fa11abf514eca1d6becc515d1a1e78)
-- USD₮0: [`0xd1bff6bb402b8c622f219d6f8a16f20f7cce7ce80e3943d0c96f2906928e77de`](https://www.okx.com/explorer/xlayer/tx/0xd1bff6bb402b8c622f219d6f8a16f20f7cce7ce80e3943d0c96f2906928e77de)
+- WOKB: [`0x63748bd5668709d0c9750b2ba301b17bb9fa11abf514eca1d6becc515d1a1e78`](https://www.okx.com/web3/explorer/xlayer/tx/0x63748bd5668709d0c9750b2ba301b17bb9fa11abf514eca1d6becc515d1a1e78)
+- USD₮0: [`0xd1bff6bb402b8c622f219d6f8a16f20f7cce7ce80e3943d0c96f2906928e77de`](https://www.okx.com/web3/explorer/xlayer/tx/0xd1bff6bb402b8c622f219d6f8a16f20f7cce7ce80e3943d0c96f2906928e77de)
 
 ### Step 2: Deposit (Provide Liquidity or Collateral)
 
@@ -140,7 +140,7 @@ Agents must authorize the router to spend their tokens via Permit2 (the standard
 ```
 
 **PassiveLP Deposit TX:**
-- [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)
+- [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/web3/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)
 - 5.1515 OKB + 441.16 USD₮0 deployed to full range
 
 ### Step 3: Borrow (For Leveraged Agents)
@@ -202,7 +202,7 @@ Bounty.createBounty({
 // Deposits rewardAmount to contract escrow
 ```
 
-**PassiveLP Deposit TX:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)
+**PassiveLP Deposit TX:** [`0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95`](https://www.okx.com/web3/explorer/xlayer/tx/0x6aef90e9ce3d14a27b102460b9c226fca8f100eca250470609145f6a972c0d95)
 
 ### Satisfy the Condition
 
@@ -292,9 +292,9 @@ cast call 0x76Fd297e2D437cd7f76d50F01AfE6160f86e9990 \
 
 All agent activity is queryable on OKX Explorer:
 
-- **PassiveLP wallet:** https://www.okx.com/explorer/xlayer/address/0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02
-- **TrendFollower wallet:** https://www.okx.com/explorer/xlayer/address/0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1
-- **Predator wallet:** https://www.okx.com/explorer/xlayer/address/0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D
+- **PassiveLP wallet:** https://www.okx.com/web3/explorer/xlayer/address/0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02
+- **TrendFollower wallet:** https://www.okx.com/web3/explorer/xlayer/address/0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1
+- **Predator wallet:** https://www.okx.com/web3/explorer/xlayer/address/0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D
 
 ---
 
@@ -453,7 +453,7 @@ This implementation demonstrates **design validation only** (builder artifacts s
 **Proof artifacts:**
 - Client module: `src/lib/okx-dex.ts` (1,050 LOC)
 - Agent integration: `src/agents/agent-trend-follower.ts` (quote fetch and builder input flow)
-- Evidence file: `/talos-runtime/state/evidence/CP-022-quote-acquisition.md` (full design documentation)
+- Evidence file: CP-022-quote-acquisition.md in the talos-runtime repo (full design documentation)
 
 ---
 
@@ -462,8 +462,8 @@ This implementation demonstrates **design validation only** (builder artifacts s
 **60-second verification:**
 
 1. ✅ **Contracts deployed:**
-   - Arena: [`0x1e27EE1aa171845CE2523a867Fc5114318916d61`](https://www.okx.com/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61)
-   - Bounty: [`0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816`](https://www.okx.com/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816)
+   - Arena: [`0x1e27EE1aa171845CE2523a867Fc5114318916d61`](https://www.okx.com/web3/explorer/xlayer/address/0x1e27EE1aa171845CE2523a867Fc5114318916d61)
+   - Bounty: [`0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816`](https://www.okx.com/web3/explorer/xlayer/address/0xc5150bC44A9CAA51A0D50Ab56266F091Db2f5816)
 
 2. ✅ **Agents funded:** Check wallet balances on OKX Explorer (links above)
 
