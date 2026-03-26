@@ -520,6 +520,31 @@ npm run deploy
 
 See [`docs/specs/DEPLOYMENT.md`](docs/specs/DEPLOYMENT.md) for detailed deployment guide.
 
+## 🔨 What We Shipped
+
+**11,389 lines of original code. ~20 on-chain transactions. ~$2.27 total gas.**
+
+| Language | Lines | What |
+|---|---|---|
+| TypeScript | 9,089 | Agents, server, SDK, tests |
+| Solidity | 1,342 | Arena (508), Bounty (412), interfaces |
+| Shell | 958 | Deploy & execution scripts |
+
+*Excludes vendored libraries (OpenZeppelin, forge-std).*
+
+### On-Chain Activity — X Layer (Chain 196)
+
+| Wallet | Role | TXs | Highlights |
+|---|---|---|---|
+| [`0x7163…70b`](https://www.okx.com/web3/explorer/xlayer/address/0x71632aA7C30D6A1644e5Db13d245bd195A08b70b) | Deployer | ~12 | Arena + Bounty deploy, [3 agents in 1 TX](https://www.okx.com/web3/explorer/xlayer/tx/0xddebc7671996e37bb254e6f3cb7125c9474130015285dd2587eacbabbc802c91), vault creation, round start |
+| [`0x6E99…b02`](https://www.okx.com/web3/explorer/xlayer/address/0x6E99BcB062846F0a3CaA68855F6bAd6174b1ab02) | PassiveLP | 1 | Vault 2 — Round 1 execution |
+| [`0x7287…C1`](https://www.okx.com/web3/explorer/xlayer/address/0x7287Ce9c02BeE9615fFBF3A690cd9179E6287bC1) | TrendFollower | 2 | Vault 4 — incl. [live OKX API → on-chain](https://www.okx.com/web3/explorer/xlayer/tx/0xf916c949dc17481c793ba8de06f2a8bd2f06f34a284cb67fcac4bcb5488899c5) |
+| [`0xD6bA…04D`](https://www.okx.com/web3/explorer/xlayer/address/0xD6bA4D328fA8c8ABb0E64fc51Be8B769D143104D) | Predator | 5 | Vault 5 — delta-neutral position building |
+
+**Total gas for full lifecycle: ~$2.27** — X Layer makes autonomous agents economically viable.
+
+---
+
 ## License
 
 AEGIS Arena is licensed under the **Apache 2.0** license. See [`LICENSE`](LICENSE) for details.
